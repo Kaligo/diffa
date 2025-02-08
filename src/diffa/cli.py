@@ -59,7 +59,7 @@ def data_diff(
     lookback_window: int,
     execution_date: datetime,
 ):  
-    ConfigManager().config(
+    ConfigManager().configure(
         source_schema=source_schema,
         source_table=source_table,
         target_schema=target_schema,
@@ -67,8 +67,6 @@ def data_diff(
     )
     diff_service = DiffaService()
     return diff_service.compare_tables(execution_date, lookback_window)
-    # database_manager.get_history_db().create_diff_table()
-
 
 @cli.command()
 def configure():
@@ -85,8 +83,8 @@ def configure():
     config["target_uri"] = click.prompt(
         "Enter the target db connection string", default=config.get("target_uri", "")
     )
-    config["diffa_db_uri"] = click.prompt(
-        "Enter the diffa db connection string", default=config.get("diffa_db_uri", "")
+    config["diffa_uri"] = click.prompt(
+        "Enter the diffa db connection string", default=config.get("diffa_uri", "")
     )
 
     with open(CONFIG_FILE, "w", encoding="utf-8") as f:

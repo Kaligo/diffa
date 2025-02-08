@@ -6,14 +6,14 @@ from datetime import datetime
 from typing import Optional
 import uuid
 from typing_extensions import Self
-from diffa.config import DIFFA__HISTORY_SCHEMA, DIFFA__HISTORY_TABLE
+from diffa.config import ConfigManager
 
 Base = declarative_base()
-
+config = ConfigManager()
 
 class DiffRecord(Base):
-    __tablename__ = DIFFA__HISTORY_TABLE
-    metadata = MetaData(schema=DIFFA__HISTORY_SCHEMA)
+    __tablename__ = config.get_table("diffa")
+    metadata = MetaData(schema=config.get_schema("diffa"))
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     table_name = Column(String)
     start_check_date = Column(DateTime)

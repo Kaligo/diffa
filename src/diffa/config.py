@@ -5,6 +5,8 @@ from diffa.utils import Logger
 
 CONFIG_DIR = os.path.expanduser("~/.diffa")
 CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
+DIFFA_DB_SCHEMA = "public"
+DIFFA_DB_TABLE = "diffa_history"
 
 logger = Logger(__name__)
 
@@ -24,24 +26,24 @@ class ConfigManager:
         if not hasattr(self, "config"):
             self.config = {
                 "source": {
-                    "source_db_info": None,
-                    "source_schema": None,
-                    "source_table": None,
+                    "db_info": None,
+                    "schema": None,
+                    "table": None,
                 },
                 "target": {
-                    "target_db_info": None,
-                    "target_schema": None,
-                    "target_table": None,
+                    "db_info": None,
+                    "schema": None,
+                    "table": None,
                 },
                 "diffa": {
-                    "diffa_db_info": None,
-                    "diffa_schema": "public",
-                    "diffa_table": "diffa_history",
+                    "db_info": None,
+                    "schema": DIFFA_DB_SCHEMA,
+                    "table": DIFFA_DB_TABLE,
                 },
             }
             self.__load_config()
 
-    def config(
+    def configure(
         self,
         *,
         source_db_info: str = None,
@@ -54,30 +56,31 @@ class ConfigManager:
     ):
         self.config["source"].update(
             {
-                "source_db_info": source_db_info
-                or self.config["source"].get("source_db_info"),
-                "source_schema": source_schema
-                or self.config["source"].get("source_schema"),
-                "source_table": source_table
-                or self.config["source"].get("source_table"),
+                "db_info": source_db_info
+                or self.config["source"].get("db_info"),
+                "schema": source_schema
+                or self.config["source"].get("schema"),
+                "table": source_table
+                or self.config["source"].get("table"),
             }
         )
         self.config["target"].update(
             {
-                "target_db_info": target_db_info
-                or self.config["target"].get("target_db_info"),
-                "target_schema": target_schema
-                or self.config["target"].get("target_schema"),
-                "target_table": target_table
-                or self.config["target"].get("target_table"),
+                "db_info": target_db_info
+                or self.config["target"].get("db_info"),
+                "schema": target_schema
+                or self.config["target"].get("schema"),
+                "table": target_table
+                or self.config["target"].get("table"),
             }
         )
         self.config["diffa"].update(
             {
-                "diffa_db_info": diffa_db_info
-                or self.config["diffa"].get("diffa_db_info"),
+                "db_info": diffa_db_info
+                or self.config["diffa"].get("db_info"),
             }
         )
+        logger.info(f"Config updated: {self.config}")
 
     def __load_config(self):
         uri_config = {}
@@ -86,14 +89,20 @@ class ConfigManager:
                 uri_config = json.load(f)
         self.config["source"].update(
             {
-                "source_db_info": os.getenv("DIFFA__SOURCE_URI")
+                "db_info": os.getenv("DIFFA__SOURCE_URI")
                 or uri_config.get("source_uri"),
             }
         )
         self.config["target"].update(
             {
-                "target_db_info": os.getenv("DIFFA__TARGET_URI")
+                "db_info": os.getenv("DIFFA__TARGET_URI")
                 or uri_config.get("target_uri"),
+            }
+        )
+        self.config["diffa"].update(
+            {
+                "db_info": os.getenv("DIFFA__DIFFA_URI")
+                or uri_config.get("diffa_uri"),
             }
         )
 
@@ -117,11 +126,12 @@ class ConfigManager:
             "db_url": db_info,
         }
 
-    def get_source_db_info(self):
-        return self.__parse_db_info(db_key="source")
-
-    def get_target_db_info(self):
-        return self.__parse_db_info(db_key="target")
-
-    def get_diffa_db_info(self):
-        return self.__parse_db_info(db_key="diffa")
+    def get_db_info(self, db_key: str):
+        return self.__parse_db_info(db_key=db_key)
+    
+    def get_schema(self, db_key: str):
+        return self.config[db_key]["schema"]
+    
+    def get_table(self, db_key: str):
+        return self.config[db_key]["table"]
+    
