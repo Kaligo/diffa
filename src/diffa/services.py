@@ -1,22 +1,23 @@
 from datetime import datetime, timedelta
-from diffa.core.db.databases import DatabaseManager
-from diffa.core.db.models import DiffRecordSchema
-from diffa.utils.logger import Logger
+from diffa.db.databases import SourceTargetDatabase, DiffaDatabase
+from diffa.config import ConfigManager
+from diffa.db.models import DiffRecordSchema
+from diffa.utils import Logger
 
 logger = Logger(__name__)
 
 
 class DiffaService:
-    def __init__(self, database_manager: DatabaseManager):
-        self.dm = database_manager
+    def __init__(self):
+        self.cm = ConfigManager()
 
     def compare_tables(self, execution_date: datetime, lookback_window: int):
         start_date, end_date = self.__get_time_range(execution_date, lookback_window)
 
         source_db, target_db, history_db = (
-            self.dm.get_source_db(),
-            self.dm.get_target_db(),
-            self.dm.get_history_db(),
+            SourceTargetDatabase(self.cm.get_source_db_info()),
+            SourceTargetDatabase(self.cm.get_target_db_info()),
+            DiffaDatabase(self.cm.get_diffa_db_info()),
         )
 
         source_count, target_count = (
@@ -25,7 +26,9 @@ class DiffaService:
         )
 
         status = "valid" if source_count <= target_count else "invalid"
-        logger.info(f"Source count: {source_count}, Target count: {target_count}, Status: {status}")
+        logger.info(
+            f"Source count: {source_count}, Target count: {target_count}, Status: {status}"
+        )
         diff_record = DiffRecordSchema(
             table_name=source_db.db_info["table"],
             start_check_date=start_date,

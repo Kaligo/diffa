@@ -1,12 +1,11 @@
+from datetime import datetime
+from typing import Iterable
 import psycopg2
 import psycopg2.extras
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
-from datetime import datetime
-from typing import Iterable
-from diffa.core.db.models import DiffRecordSchema, DiffRecord
-from diffa.core.db.config import ConfigManager
-from diffa.utils.logger import Logger
+from diffa.db.models import DiffRecordSchema, DiffRecord
+from diffa.utils import Logger
 
 logger = Logger(__name__)
 
@@ -132,26 +131,3 @@ class DiffaDatabase(Database):
             DiffRecord.metadata.create_all(self.conn.get_bind())
         finally:
             self.close()
-
-
-class DatabaseManager:
-    _instance = None
-
-    def __new__(cls, *args, **kwargs):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
-
-    def __init__(self, config_manager: ConfigManager):
-        self.source_db_info = config_manager.get_source_db_info()
-        self.target_db_info = config_manager.get_target_db_info()
-        self.history_db_info = config_manager.get_history_db_info()
-
-    def get_source_db(self):
-        return SourceTargetDatabase(self.source_db_info)
-
-    def get_target_db(self):
-        return SourceTargetDatabase(self.target_db_info)
-
-    def get_history_db(self):
-        return DiffaDatabase(self.history_db_info)

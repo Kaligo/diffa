@@ -3,9 +3,8 @@ import os
 from datetime import datetime
 import json
 import click
-from diffa.core.services import DiffaService
-from diffa.core.db.config import ConfigManager
-from diffa.core.db.databases import DatabaseManager
+from diffa.services import DiffaService
+from diffa.config import ConfigManager, CONFIG_FILE, CONFIG_DIR
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
@@ -59,37 +58,41 @@ def data_diff(
     target_table: str,
     lookback_window: int,
     execution_date: datetime,
-):
-    database_manager = DatabaseManager(
-        ConfigManager(
-            source_schema=source_schema,
-            source_table=source_table,
-            target_schema=target_schema,
-            target_table=target_table,
-        )
+):  
+    ConfigManager().config(
+        source_schema=source_schema,
+        source_table=source_table,
+        target_schema=target_schema,
+        target_table=target_table,
     )
-    diff_service = DiffaService(database_manager)
+    diff_service = DiffaService()
     return diff_service.compare_tables(execution_date, lookback_window)
     # database_manager.get_history_db().create_diff_table()
 
 
 @cli.command()
 def configure():
-    source_db_info = click.prompt("Enter the source db connection string")
-    target_db_info = click.prompt("Enter the target db connection string")
-    diffa_db_info = click.prompt("Enter the diffa db connection string")
+    os.makedirs(CONFIG_DIR, exist_ok=True)
 
-    diffa_config_dir = os.path.expanduser("~/.diffa")
-    if not os.path.exists(diffa_config_dir):
-        os.makedirs(diffa_config_dir)
-    config_file = os.path.join(diffa_config_dir, "config.json")
-    with open(config_file, "w", encoding="utf-8") as f:
-        config = {
-            "source_uri": source_db_info,
-            "target_uri": target_db_info,
-            "diffa_db_uri": diffa_db_info,
-        }
-        json.dump(config, f)
+    config = {}
+    if os.path.exists(CONFIG_FILE):
+        with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+            config = json.load(f)
+
+    config["source_uri"] = click.prompt(
+        "Enter the source db connection string", default=config.get("source_uri", "")
+    )
+    config["target_uri"] = click.prompt(
+        "Enter the target db connection string", default=config.get("target_uri", "")
+    )
+    config["diffa_db_uri"] = click.prompt(
+        "Enter the diffa db connection string", default=config.get("diffa_db_uri", "")
+    )
+
+    with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+        json.dump(config, f, indent=4)
+
+    click.echo("Configuration saved to successfully.")
 
 
 if __name__ == "__main__":

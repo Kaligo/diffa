@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import Optional
 import uuid
 from typing_extensions import Self
-from diffa.core.db.config import DIFFA__HISTORY_SCHEMA, DIFFA__HISTORY_TABLE
+from diffa.config import DIFFA__HISTORY_SCHEMA, DIFFA__HISTORY_TABLE
 
 Base = declarative_base()
 
