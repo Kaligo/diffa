@@ -58,7 +58,7 @@ def data_diff(
     target_table: str,
     lookback_window: int,
     execution_date: datetime,
-):  
+):
     ConfigManager().configure(
         source_schema=source_schema,
         source_table=source_table,
@@ -68,23 +68,23 @@ def data_diff(
     diff_service = DiffaService()
     return diff_service.compare_tables(execution_date, lookback_window)
 
+
 @cli.command()
 def configure():
-    os.makedirs(CONFIG_DIR, exist_ok=True)
-
+    config_manager = ConfigManager()
     config = {}
-    if os.path.exists(CONFIG_FILE):
-        with open(CONFIG_FILE, "r", encoding="utf-8") as f:
-            config = json.load(f)
 
     config["source_uri"] = click.prompt(
-        "Enter the source db connection string", default=config.get("source_uri", "")
+        "Enter the source db connection string",
+        default=config_manager.get_db_info("source"),
     )
     config["target_uri"] = click.prompt(
-        "Enter the target db connection string", default=config.get("target_uri", "")
+        "Enter the target db connection string",
+        default=config_manager.get_db_info("target"),
     )
     config["diffa_uri"] = click.prompt(
-        "Enter the diffa db connection string", default=config.get("diffa_uri", "")
+        "Enter the diffa db connection string",
+        default=config_manager.get_db_info("diffa"),
     )
 
     with open(CONFIG_FILE, "w", encoding="utf-8") as f:

@@ -15,9 +15,9 @@ class DiffaService:
         start_date, end_date = self.__get_time_range(execution_date, lookback_window)
 
         source_db, target_db, history_db = (
-            SourceTargetDatabase(self.cm.get_db_info("source")),
-            SourceTargetDatabase(self.cm.get_db_info("target")),
-            DiffaDatabase(self.cm.get_db_info("diffa")),
+            SourceTargetDatabase(self.cm.get_db_config("source")),
+            SourceTargetDatabase(self.cm.get_db_config("target")),
+            DiffaDatabase(self.cm.get_db_config("diffa")),
         )
 
         source_count, target_count = (
