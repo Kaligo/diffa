@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "diffa"
+version = "0.1.0"
+description = "Checking data different between Data Source and Data Warehouse"
+authors = ["Quoc Nguyen <quoc.nguyen@ascenda.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "3.12.8"
+click = "8.1.8"
+pydantic = "2.10.6"
+flake8 = "^7.1.1"
+dsnparse = "0.2.1"
+psycopg2 = "2.9.10"
+alembic = "1.14.1"
+sqlalchemy = "2.0.38"
+
+[tool.poetry.scripts]
+diffa = "diffa.cli:cli"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
