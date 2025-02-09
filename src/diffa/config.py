@@ -1,6 +1,8 @@
 import os
-import dsnparse
 import json
+
+import dsnparse
+
 from diffa.utils import Logger
 
 CONFIG_DIR = os.path.expanduser("~/.diffa")
@@ -78,7 +80,6 @@ class ConfigManager:
                 or self.config["diffa"].get("db_info"),
             }
         )
-        logger.info(f"Config updated: {self.config}")
 
     def __load_config(self):
         uri_config = {}
@@ -117,6 +118,7 @@ class ConfigManager:
             raise e
         return {
             "host": dns.host,
+            "scheme": dns.scheme,
             "port": dns.port,
             "database": dns.database,
             "user": dns.username,

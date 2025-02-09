@@ -1,7 +1,8 @@
 from datetime import datetime, timedelta
-from diffa.db.databases import SourceTargetDatabase, DiffaDatabase
+
+from diffa.db.factory import DatabaseFactory
 from diffa.config import ConfigManager
-from diffa.db.models import DiffRecordSchema
+from diffa.db.diffa import DiffRecordSchema, SQLAlchemyDiffaDatabase
 from diffa.utils import Logger
 
 logger = Logger(__name__)
@@ -15,9 +16,9 @@ class DiffaService:
         start_date, end_date = self.__get_time_range(execution_date, lookback_window)
 
         source_db, target_db, history_db = (
-            SourceTargetDatabase(self.cm.get_db_config("source")),
-            SourceTargetDatabase(self.cm.get_db_config("target")),
-            DiffaDatabase(self.cm.get_db_config("diffa")),
+            DatabaseFactory.create_database(self.cm.get_db_config("source")),
+            DatabaseFactory.create_database(self.cm.get_db_config("target")),
+            SQLAlchemyDiffaDatabase(self.cm.get_db_config("diffa")),
         )
 
         source_count, target_count = (
@@ -30,7 +31,7 @@ class DiffaService:
             f"Source count: {source_count}, Target count: {target_count}, Status: {status}"
         )
         diff_record = DiffRecordSchema(
-            table_name=source_db.db_info["table"],
+            table_name=source_db.db_config["table"],
             start_check_date=start_date,
             end_check_date=end_date,
             source_count=source_count,

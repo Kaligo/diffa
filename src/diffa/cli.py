@@ -2,9 +2,11 @@ import sys
 import os
 from datetime import datetime
 import json
+
 import click
+
 from diffa.services import DiffaService
-from diffa.config import ConfigManager, CONFIG_FILE, CONFIG_DIR
+from diffa.config import ConfigManager, CONFIG_FILE
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
