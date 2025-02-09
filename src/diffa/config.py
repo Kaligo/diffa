@@ -12,7 +12,10 @@ DIFFA_DB_TABLE = "diffa_history"
 
 logger = Logger(__name__)
 
+
 class ConfigManager:
+    """Singleton Pattern for ConfigManager to ensure that the config is loaded only once"""
+
     _instance = None
 
     def __new__(cls, *args, **kwargs):
@@ -56,28 +59,21 @@ class ConfigManager:
     ):
         self.config["source"].update(
             {
-                "db_info": source_db_info
-                or self.config["source"].get("db_info"),
-                "schema": source_schema
-                or self.config["source"].get("schema"),
-                "table": source_table
-                or self.config["source"].get("table"),
+                "db_info": source_db_info or self.config["source"].get("db_info"),
+                "schema": source_schema or self.config["source"].get("schema"),
+                "table": source_table or self.config["source"].get("table"),
             }
         )
         self.config["target"].update(
             {
-                "db_info": target_db_info
-                or self.config["target"].get("db_info"),
-                "schema": target_schema
-                or self.config["target"].get("schema"),
-                "table": target_table
-                or self.config["target"].get("table"),
+                "db_info": target_db_info or self.config["target"].get("db_info"),
+                "schema": target_schema or self.config["target"].get("schema"),
+                "table": target_table or self.config["target"].get("table"),
             }
         )
         self.config["diffa"].update(
             {
-                "db_info": diffa_db_info
-                or self.config["diffa"].get("db_info"),
+                "db_info": diffa_db_info or self.config["diffa"].get("db_info"),
             }
         )
 
@@ -102,8 +98,7 @@ class ConfigManager:
         )
         self.config["diffa"].update(
             {
-                "db_info": os.getenv("DIFFA__DIFFA_URI")
-                or uri_config.get("diffa_uri"),
+                "db_info": os.getenv("DIFFA__DIFFA_URI") or uri_config.get("diffa_uri"),
             }
         )
 
@@ -130,13 +125,12 @@ class ConfigManager:
 
     def get_db_config(self, db_key: str):
         return self.__parse_db_config(db_key=db_key)
-    
+
     def get_schema(self, db_key: str):
         return self.config[db_key]["schema"]
-    
+
     def get_table(self, db_key: str):
         return self.config[db_key]["table"]
 
     def get_db_info(self, db_key: str):
         return self.config[db_key]["db_info"]
-    
