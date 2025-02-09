@@ -124,4 +124,3 @@ class SQLAlchemyDiffaDatabase(Database):
             DiffRecord.metadata.create_all(self.engine)
         finally:
             self.close()
-

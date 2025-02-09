@@ -8,6 +8,7 @@ from diffa.db.base import Database
 
 logger = Logger(__name__)
 
+
 class PosgrestDatabase(Database):
     """PostgreSQL and Redshift Database Adapter"""
 
@@ -50,8 +51,11 @@ class PosgrestDatabase(Database):
             self.close()
 
     def get_count(self, start_date: datetime, end_date: datetime):
-        query = f"""SELECT COUNT(*) AS results FROM {self.db_config['schema']}.{self.db_config['table']} 
-            WHERE created_at >= '{start_date}' AND created_at < '{end_date}'"""
+        query = f"""
+            SELECT COUNT(*) AS results 
+            FROM {self.db_config['schema']}.{self.db_config['table']}
+            WHERE created_at >= '{start_date}' AND created_at < '{end_date}'
+        """
         try:
             logger.info(f"Querying: {query}")
             result = int(list(self.execute_query(query))[0]["results"])
