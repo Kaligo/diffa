@@ -51,7 +51,7 @@ class PosgrestDatabase(Database):
 
     def get_count(self, start_date: datetime, end_date: datetime):
         query = f"""SELECT COUNT(*) AS results FROM {self.db_config['schema']}.{self.db_config['table']} 
-            WHERE created_at BETWEEN '{start_date}' AND '{end_date}'"""
+            WHERE created_at >= '{start_date}' AND created_at < '{end_date}'"""
         try:
             logger.info(f"Querying: {query}")
             result = int(list(self.execute_query(query))[0]["results"])
