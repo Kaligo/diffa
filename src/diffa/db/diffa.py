@@ -35,7 +35,7 @@ class DiffRecord(Base):
 class DiffRecordSchema(BaseModel):
     """Pydantic Model (validation) for Diffa state management"""
 
-    id: Optional[int] = uuid.uuid4()
+    id: Optional[uuid.UUID] = uuid.uuid4()
     table_name: str
     start_check_date: datetime
     end_check_date: datetime
