@@ -38,3 +38,4 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     op.drop_table(f"{config_manager.get_table('diffa')}")
+    op.execute(f"DROP DATABASE IF EXISTS {config_manager.get_database('diffa')}")

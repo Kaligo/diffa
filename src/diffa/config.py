@@ -30,16 +30,19 @@ class ConfigManager:
             self.config = {
                 "source": {
                     "db_info": None,
+                    "database": None,
                     "schema": None,
                     "table": None,
                 },
                 "target": {
                     "db_info": None,
+                    "database": None,
                     "schema": None,
                     "table": None,
                 },
                 "diffa": {
                     "db_info": None,
+                    "database": None,
                     "schema": DIFFA_DB_SCHEMA,
                     "table": DIFFA_DB_TABLE,
                 },
@@ -50,9 +53,11 @@ class ConfigManager:
         self,
         *,
         source_db_info: str = None,
+        source_database: str,
         source_schema: str = "public",
         source_table: str,
         target_db_info: str = None,
+        target_database: str,
         target_schema: str = "public",
         target_table: str,
         diffa_db_info: str = None,
@@ -60,15 +65,17 @@ class ConfigManager:
         self.config["source"].update(
             {
                 "db_info": source_db_info or self.config["source"].get("db_info"),
+                "database": source_database,
                 "schema": source_schema or self.config["source"].get("schema"),
-                "table": source_table or self.config["source"].get("table"),
+                "table": source_table,
             }
         )
         self.config["target"].update(
             {
                 "db_info": target_db_info or self.config["target"].get("db_info"),
+                "database": target_database,
                 "schema": target_schema or self.config["target"].get("schema"),
-                "table": target_table or self.config["target"].get("table"),
+                "table": target_table,
             }
         )
         self.config["diffa"].update(
@@ -104,10 +111,10 @@ class ConfigManager:
 
     def __parse_db_config(self, db_key: str):
         try:
-            db_info = self.config[db_key]["db_info"]
+            dns = dsnparse.parse(self.config[db_key]["db_info"])
+            db_database = self.config[db_key]["database"] or dns.database
             db_schema = self.config[db_key]["schema"]
             db_table = self.config[db_key]["table"]
-            dns = dsnparse.parse(db_info)
         except TypeError as e:
             logger.error(f"Seems like you have not set the db info for {db_key}")
             raise e
@@ -115,16 +122,19 @@ class ConfigManager:
             "host": dns.host,
             "scheme": dns.scheme,
             "port": dns.port,
-            "database": dns.database,
+            "database": db_database,
             "user": dns.username,
             "password": dns.password,
             "schema": db_schema,
             "table": db_table,
-            "db_url": db_info,
+            "db_url": f"{dns.scheme}://{dns.username}:{dns.password}@{dns.host}:{dns.port}/{db_database}",
         }
 
     def get_db_config(self, db_key: str):
         return self.__parse_db_config(db_key=db_key)
+
+    def get_database(self, db_key: str):
+        return self.config[db_key]["database"]
 
     def get_schema(self, db_key: str):
         return self.config[db_key]["schema"]

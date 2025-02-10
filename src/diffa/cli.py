@@ -19,6 +19,12 @@ def cli():
 
 @cli.command()
 @click.option(
+    "--source-database",
+    type=str,
+    required=True,
+    help="Source database name.",
+)
+@click.option(
     "--source-schema",
     type=str,
     help="Source table schema (default: public).",
@@ -28,6 +34,12 @@ def cli():
     required=True,
     type=str,
     help="Source table name.",
+)
+@click.option(
+    "--target-database",
+    type=str,
+    required=True,
+    help="Target database name.",
 )
 @click.option(
     "--target-schema",
@@ -54,16 +66,20 @@ def cli():
 )
 def data_diff(
     *,
+    source_database: str,
     source_schema: str = None,
     source_table: str,
+    target_database: str,
     target_schema: str = None,
     target_table: str,
     lookback_window: int,
     execution_date: datetime,
 ):
     ConfigManager().configure(
+        source_database=source_database,
         source_schema=source_schema,
         source_table=source_table,
+        target_database=target_database,
         target_schema=target_schema,
         target_table=target_table,
     )
