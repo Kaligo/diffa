@@ -21,7 +21,6 @@ def cli():
 @click.option(
     "--source-database",
     type=str,
-    required=True,
     help="Source database name.",
 )
 @click.option(
@@ -38,7 +37,6 @@ def cli():
 @click.option(
     "--target-database",
     type=str,
-    required=True,
     help="Target database name.",
 )
 @click.option(
@@ -66,10 +64,10 @@ def cli():
 )
 def data_diff(
     *,
-    source_database: str,
+    source_database: str = None,
     source_schema: str = None,
     source_table: str,
-    target_database: str,
+    target_database: str = None,
     target_schema: str = None,
     target_table: str,
     lookback_window: int,

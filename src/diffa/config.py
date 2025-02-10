@@ -53,11 +53,11 @@ class ConfigManager:
         self,
         *,
         source_db_info: str = None,
-        source_database: str,
+        source_database: str = None,
         source_schema: str = "public",
         source_table: str,
         target_db_info: str = None,
-        target_database: str,
+        target_database: str = None,
         target_schema: str = "public",
         target_table: str,
         diffa_db_info: str = None,
@@ -65,7 +65,7 @@ class ConfigManager:
         self.config["source"].update(
             {
                 "db_info": source_db_info or self.config["source"].get("db_info"),
-                "database": source_database,
+                "database": source_database or self.config["source"].get("database"),
                 "schema": source_schema or self.config["source"].get("schema"),
                 "table": source_table,
             }
@@ -73,7 +73,7 @@ class ConfigManager:
         self.config["target"].update(
             {
                 "db_info": target_db_info or self.config["target"].get("db_info"),
-                "database": target_database,
+                "database": target_database or self.config["target"].get("database"),
                 "schema": target_schema or self.config["target"].get("schema"),
                 "table": target_table,
             }

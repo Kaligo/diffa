@@ -73,8 +73,10 @@ To compare data between two databases, run:
 
 ```sh
 diffa data-diff \
+    --source-database loyalty_engine_staging \
     --source-schema public \
     --source-table users \
+    --target-database rc-us_dev \
     --target-schema loyalty_engine \
     --target-table users \
     --lookback-window 1 \
@@ -82,9 +84,10 @@ diffa data-diff \
 ```
 
 #### Options
-
+- `--source-database`: Name of the source database (default: Infered from the connection string).
 - `--source-schema`: Schema of the source table (default: `public`).
 - `--source-table`: **(Required)** Name of the source table.
+- `--target-database`: Name of the target database (default: Infered from the connection string).
 - `--target-schema`: Schema of the target table (default: `public`).
 - `--target-table`: **(Required)** Name of the target table.
 - `--lookback-window`: **(Required)** Lookback window in days.
