@@ -103,7 +103,7 @@ class SQLAlchemyDiffaDatabase(Database):
         try:
             diff_records = (
                 self.session.query(DiffRecord)
-                .filter(DiffRecord.status == "Invalid")
+                .filter(DiffRecord.status == "invalid")
                 .all()
             )
             for record in diff_records:
