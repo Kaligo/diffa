@@ -12,10 +12,18 @@ On the meltano side, we can install the diffa just like any other plugin.
     namespace: diffa
     pip_url: git+https://github.com/Kaligo/diffa.git
     executable: diffa
-    env:
-      - DIFFA__SOURCE_URI:
-      - DIFFA__TARGET_URI:
-      - DIFFA__DIFFA_DB_URI:
+      config:
+        uri:
+          source: ${DIFFA__SOURCE_URI}
+          target: ${DIFFA__TARGET_URI}
+          diffa_db: ${DIFFA__DIFFA_DB_URI}
+    settings:
+      - name: uri.source
+        env: DIFFA__SOURCE_URI
+      - name: uri.target
+        env: DIFFA__TARGET_URI
+      - name: uri.diffa_db
+        env: DIFFA__DIFFA_DB_URI
 ```
 
 ## Configuration
