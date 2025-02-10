@@ -98,7 +98,7 @@ class ConfigManager:
         )
         self.config["diffa"].update(
             {
-                "db_info": os.getenv("DIFFA__DIFFA_URI") or uri_config.get("diffa_uri"),
+                "db_info": os.getenv("DIFFA__DIFFA_DB_URI") or uri_config.get("diffa_uri"),
             }
         )
 

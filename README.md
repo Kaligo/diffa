@@ -15,7 +15,7 @@ On the meltano side, we can install the diffa just like any other plugin.
     env:
       - DIFFA__SOURCE_URI:
       - DIFFA__TARGET_URI:
-      - DIFFA__DIFFA_URI:
+      - DIFFA__DIFFA_DB_URI:
 ```
 
 ## Configuration
@@ -25,7 +25,7 @@ Users can configure database connection strings in two ways:
 1. **Environment Variables** (higher priority)
    - `DIFFA__SOURCE_URI`: Connection string for the source database.
    - `DIFFA__TARGET_URI`: Connection string for the target database.
-   - `DIFFA__DIFFA_URI`: Connection string for the Diffa database.
+   - `DIFFA__DIFFA_DB_URI`: Connection string for the Diffa database.
 
 2. **Configuration File** (if environment variables are not set)
    - Run the following command to configure Diffa interactively:
