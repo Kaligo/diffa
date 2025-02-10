@@ -4,11 +4,14 @@ from datetime import datetime
 import json
 
 import click
+from alembic import command
+from alembic.config import Config
 
 from diffa.services import DiffaService
 from diffa.config import ConfigManager, CONFIG_FILE
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(os.path.dirname(SCRIPT_DIR))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 
 
@@ -84,13 +87,13 @@ def data_diff(
         target_table=target_table,
     )
     diff_service = DiffaService()
-    is_not_diff =  diff_service.compare_tables(execution_date, lookback_window)
+    is_not_diff = diff_service.compare_tables(execution_date, lookback_window)
     if is_not_diff:
         click.echo("No difference found.")
         sys.exit(0)
     else:
         click.echo("Difference found.")
-        sys.exit(4) # This is for Airflow to recognize the failure due to diff
+        sys.exit(4)  # This is for Airflow to recognize the failure due to diff
 
 
 @cli.command()
@@ -116,6 +119,12 @@ def configure():
 
     click.echo("Configuration saved to successfully.")
 
+
+@cli.command()
+def migrate():
+    alembic_cfg = Config(os.path.join(BASE_DIR, "alembic.ini"))
+    command.upgrade(alembic_cfg, "head")
+    click.echo("Database migration completed successfully.")
 
 if __name__ == "__main__":
     cli()

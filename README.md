@@ -71,6 +71,14 @@ diffa data-diff \
 diffa configure
 ```
 
+### `migrate`
+
+- Run `diffa` database migrations.
+
+```sh
+diffa migrate
+```
+
 ### `data-diff`
 
 The `data-diff` command checks data differences between two database systems.
