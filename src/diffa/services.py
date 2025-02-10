@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from concurrent.futures import ThreadPoolExecutor
 
 from diffa.db.factory import DatabaseFactory
 from diffa.config import ConfigManager
@@ -21,9 +22,13 @@ class DiffaService:
             SQLAlchemyDiffaDatabase(self.cm.get_db_config("diffa")),
         )
 
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            future_source_count = executor.submit(source_db.get_count, start_date, end_date)
+            future_target_count = executor.submit(target_db.get_count, start_date, end_date)
+        
         source_count, target_count = (
-            source_db.get_count(start_date, end_date),
-            target_db.get_count(start_date, end_date),
+            future_source_count.result(),
+            future_target_count.result(),
         )
 
         status = "valid" if source_count <= target_count else "invalid"
