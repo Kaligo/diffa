@@ -24,14 +24,15 @@ class PosgrestDatabase(Database):
                 database=self.db_config["database"],
                 user=self.db_config["user"],
                 password=self.db_config["password"],
+                sslmode="prefer", # Prefer SSL mode
             )
             self.conn.set_session(autocommit=True)
 
-    def execute_query(self, query: str):
+    def execute_query(self, query: str, sql_params: tuple = None):
         self.connect()
         try:
             with self.conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cursor:
-                cursor.execute(query)
+                cursor.execute(query, sql_params)
                 for row in cursor:
                     yield row
         finally:
@@ -58,11 +59,13 @@ class PosgrestDatabase(Database):
         """
         try:
             logger.info(f"Querying: {query}")
-            result = int(list(self.execute_query(query))[0]["results"])
+            result = int(
+                list(self.execute_query(query))[0]["results"]
+            )
             logger.info(f"Result of the query '{query}': {result}")
             return result
         except Exception as e:
-            print(f"An error occurred: {e}")
+            logger.error(f"An error occurred: {e}")
             raise e
         finally:
             self.close()

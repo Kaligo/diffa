@@ -74,13 +74,13 @@ class SQLAlchemyDiffaDatabase(Database):
         self.session = None
 
     def connect(self):
-        self.engine = create_engine(self.db_config["db_url"])
+        self.engine = create_engine(self.db_config["db_url"] + "?sslmode=prefer") # Prefer SSL mode
         self.session = sessionmaker(bind=self.engine)()
 
-    def execute_query(self, query: str):
+    def execute_query(self, query: str, sql_params: dict = None):
         self.connect()
         try:
-            result = self.session.execute(query)
+            result = self.session.execute(query, sql_params)
             for row in result:
                 yield dict(row)
         finally:
@@ -89,8 +89,8 @@ class SQLAlchemyDiffaDatabase(Database):
     def execute_non_query(self, query, params: dict = None):
         self.connect()
         try:
-            self.session.execute(query, params)
-            self.session.commit()
+            with self.session.begin(): # Ensures transaction integrity
+                self.session.execute(query, params)
         finally:
             self.close()
 
@@ -109,7 +109,7 @@ class SQLAlchemyDiffaDatabase(Database):
             for record in diff_records:
                 yield DiffRecordSchema.model_validate(record)
         except Exception as e:
-            print(f"An error occurred: {e}")
+            logger.error(f"An error occurred: {e}")
             raise e
         finally:
             self.close()
@@ -122,7 +122,7 @@ class SQLAlchemyDiffaDatabase(Database):
             self.session.add(DiffRecord(**record_dict))
             self.session.commit()
         except Exception as e:
-            print(f"An error occurred: {e}")
+            logger.error(f"An error occurred: {e}")
             raise e
         finally:
             self.close()
