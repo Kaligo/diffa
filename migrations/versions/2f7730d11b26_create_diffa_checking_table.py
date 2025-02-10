@@ -25,7 +25,12 @@ def upgrade() -> None:
     op.create_table(
         f"{config_manager.get_table('diffa')}",
         sa.Column("id", sa.UUID, primary_key=True),
-        sa.Column("table_name", sa.String, nullable=False),
+        sa.Column("source_database", sa.String, nullable=False),
+        sa.Column("source_schema", sa.String, nullable=False),
+        sa.Column("source_table", sa.String, nullable=False),
+        sa.Column("target_database", sa.String, nullable=False),
+        sa.Column("target_schema", sa.String, nullable=False),
+        sa.Column("target_table", sa.String, nullable=False),
         sa.Column("start_check_date", sa.DateTime, nullable=False),
         sa.Column("end_check_date", sa.DateTime, nullable=False),
         sa.Column("source_count", sa.Integer, nullable=False),
@@ -38,4 +43,3 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     op.drop_table(f"{config_manager.get_table('diffa')}")
-    op.execute(f"DROP DATABASE IF EXISTS {config_manager.get_database('diffa')}")

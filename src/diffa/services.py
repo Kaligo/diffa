@@ -31,7 +31,12 @@ class DiffaService:
             f"Source count: {source_count}, Target count: {target_count}, Status: {status}"
         )
         diff_record = DiffRecordSchema(
-            table_name=source_db.db_config["table"],
+            source_database=source_db.db_config["database"],
+            source_schema=source_db.db_config["schema"],
+            source_table=source_db.db_config["table"],
+            target_database=target_db.db_config["database"],
+            target_schema=target_db.db_config["schema"],
+            target_table=target_db.db_config["table"],
             start_check_date=start_date,
             end_check_date=end_date,
             source_count=source_count,

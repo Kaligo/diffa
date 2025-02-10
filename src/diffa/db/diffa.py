@@ -22,7 +22,12 @@ class DiffRecord(Base):
     __tablename__ = config.get_table("diffa")
     metadata = MetaData(schema=config.get_schema("diffa"))
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    table_name = Column(String)
+    source_database = Column(String)
+    source_schema = Column(String)
+    source_table = Column(String)
+    target_database = Column(String)
+    target_schema = Column(String)
+    target_table = Column(String)
     start_check_date = Column(DateTime)
     end_check_date = Column(DateTime)
     source_count = Column(Integer)
@@ -36,7 +41,12 @@ class DiffRecordSchema(BaseModel):
     """Pydantic Model (validation) for Diffa state management"""
 
     id: Optional[uuid.UUID] = uuid.uuid4()
-    table_name: str
+    source_database: str
+    source_schema: str
+    source_table: str
+    target_database: str
+    target_schema: str
+    target_table: str
     start_check_date: datetime
     end_check_date: datetime
     source_count: int
