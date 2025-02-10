@@ -27,6 +27,7 @@ def cli():
     "--source-schema",
     type=str,
     help="Source table schema (default: public).",
+    default="public",
 )
 @click.option(
     "--source-table",
@@ -43,6 +44,7 @@ def cli():
     "--target-schema",
     type=str,
     help="Target table schema (default: public).",
+    default="public",
 )
 @click.option(
     "--target-table",
@@ -65,10 +67,10 @@ def cli():
 def data_diff(
     *,
     source_database: str = None,
-    source_schema: str = None,
+    source_schema: str = "public",
     source_table: str,
     target_database: str = None,
-    target_schema: str = None,
+    target_schema: str = "public",
     target_table: str,
     lookback_window: int,
     execution_date: datetime,
