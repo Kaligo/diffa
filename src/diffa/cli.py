@@ -84,7 +84,13 @@ def data_diff(
         target_table=target_table,
     )
     diff_service = DiffaService()
-    return diff_service.compare_tables(execution_date, lookback_window)
+    is_not_diff =  diff_service.compare_tables(execution_date, lookback_window)
+    if is_not_diff:
+        click.echo("No difference found.")
+        sys.exit(0)
+    else:
+        click.echo("Difference found.")
+        sys.exit(4) # This is for Airflow to recognize the failure due to diff
 
 
 @cli.command()
