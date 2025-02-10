@@ -93,19 +93,17 @@ class ConfigManager:
 
         self.config["source"].update(
             {
-                "db_info": os.getenv("DIFFA__SOURCE_URI")
-                or uri_config.get("source_uri"),
+                "db_info": os.getenv("DIFFA__SOURCE_URI", uri_config.get("source_uri"))
             }
         )
         self.config["target"].update(
             {
-                "db_info": os.getenv("DIFFA__TARGET_URI")
-                or uri_config.get("target_uri"),
+                "db_info": os.getenv("DIFFA__TARGET_URI", uri_config.get("target_uri"))
             }
         )
         self.config["diffa"].update(
             {
-                "db_info": os.getenv("DIFFA__DIFFA_DB_URI") or uri_config.get("diffa_uri"),
+                "db_info": os.getenv("DIFFA__DIFFA_DB_URI", uri_config.get("diffa_uri")),
             }
         )
 
