@@ -44,22 +44,6 @@ Users can configure database connection strings in two ways:
 
    - This will store the connection strings in `~/.diffa/config.json`.
 
-## Usage
-
-### Check Data Differences
-
-To compare data between two databases, use the `data-diff` command:
-
-```sh
-diffa data-diff \
-    --source-schema public \
-    --source-table users \
-    --target-schema loyalty_engine \
-    --target-table users \
-    --lookback-window 1 \
-    --execution-date 2025-02-02
-```
-
 ## Commands
 
 ### `configure`
