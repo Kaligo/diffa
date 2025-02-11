@@ -127,10 +127,3 @@ class SQLAlchemyDiffaDatabase(Database):
         finally:
             self.close()
 
-    def create_diff_table(self):
-        """Create the diff table"""
-        self.connect()
-        try:
-            DiffRecord.metadata.create_all(self.engine)
-        finally:
-            self.close()
