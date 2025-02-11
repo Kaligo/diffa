@@ -23,9 +23,6 @@ diffa = "diffa.cli:cli"
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.poetry.include]
-include = ["migrations/**", "alembic.ini"]
-
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-v --tb=short" 

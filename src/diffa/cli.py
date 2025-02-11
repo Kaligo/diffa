@@ -121,8 +121,7 @@ def configure():
 
 @cli.command()
 def migrate():
-    project_root = os.path.join(SCRIPT_DIR, "..", "..")
-    alembic_cfg = Config(os.path.join(project_root, "alembic.ini"))
+    alembic_cfg = Config(os.path.join(SCRIPT_DIR, "migrations", "alembic.ini"))
     command.upgrade(alembic_cfg, "head")
     click.echo("Database migration completed successfully.")
 

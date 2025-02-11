@@ -10,7 +10,7 @@ from typing import Sequence, Union
 from alembic import op
 import sqlalchemy as sa
 
-from src.diffa.config import ConfigManager
+from diffa.config import ConfigManager
 
 # revision identifiers, used by Alembic.
 revision: str = '2f7730d11b26'
