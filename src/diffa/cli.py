@@ -11,7 +11,6 @@ from diffa.services import DiffaService
 from diffa.config import ConfigManager, CONFIG_FILE
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-BASE_DIR = os.path.dirname(os.path.dirname(SCRIPT_DIR))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 
 
@@ -122,7 +121,8 @@ def configure():
 
 @cli.command()
 def migrate():
-    alembic_cfg = Config(os.path.join(BASE_DIR, "alembic.ini"))
+    project_root = os.path.join(SCRIPT_DIR, "..", "..")
+    alembic_cfg = Config(os.path.join(project_root, "alembic.ini"))
     command.upgrade(alembic_cfg, "head")
     click.echo("Database migration completed successfully.")
 
