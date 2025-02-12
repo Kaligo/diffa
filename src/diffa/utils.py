@@ -11,17 +11,14 @@ class Logger:
         )
         self.logger.addHandler(sh)
 
-    def info(self, message: str):
-        self.logger.info(message)
+    def info(self, message: str, *args, **kwargss):
+        self.logger.info(message, *args, **kwargss)
 
-    def error(self, message: str):
-        self.logger.error(message)
+    def error(self, message: str, *args, **kwargs):
+        self.logger.error(message, *args, **kwargs)
 
-    def debug(self, message: str):
-        self.logger.debug(message)
+    def debug(self, message: str, *args, **kwargs):
+        self.logger.debug(message, *args, **kwargs)
 
-    def warning(self, message: str):
-        self.logger.warning(message)
-
-class DataDiffException(Exception):
-    """Exception raised for data mismatch between source and destination."""
+    def warning(self, message: str, *args, **kwargs):
+        self.logger.warning(message, *args, **kwargs)

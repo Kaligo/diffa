@@ -1,5 +1,6 @@
 import os
 import json
+from enum import Enum
 
 import dsnparse
 
@@ -9,6 +10,11 @@ CONFIG_DIR = os.path.expanduser("~/.diffa")
 CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
 DIFFA_DB_SCHEMA = "public"
 DIFFA_DB_TABLE = "diffa_history"
+
+class ExitCode(Enum):
+    SUCCESS = 0
+    DIFF = 4 # Data mismatch detected
+    ERROR = 1 # Unexpected error (e.g., network, infra issues)
 
 logger = Logger(__name__)
 
@@ -113,9 +119,9 @@ class ConfigManager:
             db_database = self.config[db_key]["database"] or dns.database
             db_schema = self.config[db_key]["schema"]
             db_table = self.config[db_key]["table"]
-        except TypeError as e:
-            logger.error(f"Seems like you have not set the db info for {db_key}")
-            raise e
+        except TypeError:
+            logger.error(f"There's something wrong with the db info for {db_key}", exc_info=True)
+            raise
         return {
             "host": dns.host,
             "scheme": dns.scheme,

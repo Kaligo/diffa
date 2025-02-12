@@ -8,8 +8,7 @@ from alembic import command
 from alembic.config import Config
 
 from diffa.services import DiffaService
-from diffa.config import ConfigManager, CONFIG_FILE
-from diffa.utils import DataDiffException
+from diffa.config import ConfigManager, CONFIG_FILE, ExitCode
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
@@ -90,9 +89,11 @@ def data_diff(
     is_not_diff = diff_service.compare_tables(execution_date, lookback_window)
     if is_not_diff:
         click.echo("No difference found.")
+        sys.exit(ExitCode.SUCCESS.value)
     else:
         # This is for Airflow to recognize the failure due to diff
-        raise DataDiffException("Data is mismatched between Source and DW")
+        click.echo("Data is mismatched between Source and DW")
+        sys.exit(ExitCode.DIFF.value)
 
 
 @cli.command()
@@ -117,13 +118,14 @@ def configure():
         json.dump(config, f, indent=4)
 
     click.echo("Configuration saved to successfully.")
-
+    sys.exit(ExitCode.SUCCESS.value)
 
 @cli.command()
 def migrate():
     alembic_cfg = Config(os.path.join(SCRIPT_DIR, "migrations", "alembic.ini"))
     command.upgrade(alembic_cfg, "head")
     click.echo("Database migration completed successfully.")
+    sys.exit(ExitCode.SUCCESS.value)
 
 if __name__ == "__main__":
     cli()

@@ -108,9 +108,6 @@ class SQLAlchemyDiffaDatabase(Database):
             )
             for record in diff_records:
                 yield DiffRecordSchema.model_validate(record)
-        except Exception as e:
-            logger.error(f"An error occurred: {e}")
-            raise e
         finally:
             self.close()
 
@@ -121,9 +118,6 @@ class SQLAlchemyDiffaDatabase(Database):
         try:
             self.session.add(DiffRecord(**record_dict))
             self.session.commit()
-        except Exception as e:
-            logger.error(f"An error occurred: {e}")
-            raise e
         finally:
             self.close()
 

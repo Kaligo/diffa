@@ -64,8 +64,5 @@ class PosgrestDatabase(Database):
             )
             logger.info(f"Result of the query '{query}': {result}")
             return result
-        except Exception as e:
-            logger.error(f"An error occurred: {e}")
-            raise e
         finally:
             self.close()
