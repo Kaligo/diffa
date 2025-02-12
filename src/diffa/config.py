@@ -8,7 +8,7 @@ from diffa.utils import Logger
 
 CONFIG_DIR = os.path.expanduser("~/.diffa")
 CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
-DIFFA_DB_SCHEMA = "public"
+DIFFA_DB_SCHEMA = "diffa"
 DIFFA_DB_TABLE = "diffa_history"
 
 class ExitCode(Enum):
