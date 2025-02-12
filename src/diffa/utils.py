@@ -22,3 +22,6 @@ class Logger:
 
     def warning(self, message: str):
         self.logger.warning(message)
+
+class DataDiffException(Exception):
+    """Exception raised for data mismatch between source and destination."""

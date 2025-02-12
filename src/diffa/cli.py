@@ -9,6 +9,7 @@ from alembic.config import Config
 
 from diffa.services import DiffaService
 from diffa.config import ConfigManager, CONFIG_FILE
+from diffa.utils import DataDiffException
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
@@ -89,10 +90,9 @@ def data_diff(
     is_not_diff = diff_service.compare_tables(execution_date, lookback_window)
     if is_not_diff:
         click.echo("No difference found.")
-        sys.exit(0)
     else:
-        click.echo("Difference found.")
-        sys.exit(4)  # This is for Airflow to recognize the failure due to diff
+        # This is for Airflow to recognize the failure due to diff
+        raise DataDiffException("Data is mismatched between Source and DW")
 
 
 @cli.command()
