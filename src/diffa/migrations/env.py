@@ -62,7 +62,6 @@ def run_migrations_online() -> None:
     """
     connectable = create_engine(diffa_config.get_db_config("diffa")["db_url"])
     version_schema = diffa_config.get_db_config("diffa")["schema"]
-    print(f"connectable: {connectable}")
 
     with connectable.connect() as connection:
         context.configure(
