@@ -16,6 +16,7 @@ logger = Logger(__name__)
 Base = declarative_base()
 config = ConfigManager()
 
+
 class DiffRecord(Base):
     """SQLAlchemy Model for Diffa state management"""
 
@@ -56,7 +57,9 @@ class DiffRecordSchema(BaseModel):
     last_reconciled_at: Optional[datetime] = None
 
     class Config:
-        from_attributes = True  # Enable ORM mode to allow loading from SQLAlchemy models
+        from_attributes = (
+            True  # Enable ORM mode to allow loading from SQLAlchemy models
+        )
 
     @model_validator(mode="after")
     def validate_status(self) -> Self:
@@ -64,6 +67,7 @@ class DiffRecordSchema(BaseModel):
         if self.status not in allowed:
             raise ValueError(f"status must be one of {allowed}")
         return self
+
 
 class SQLAlchemyDiffaDatabase(Database):
     """SQLAlchemy Database Adapter for Diffa state management"""
@@ -74,7 +78,9 @@ class SQLAlchemyDiffaDatabase(Database):
         self.session = None
 
     def connect(self):
-        self.engine = create_engine(self.db_config["db_url"] + "?sslmode=prefer") # Prefer SSL mode
+        self.engine = create_engine(
+            self.db_config["db_url"] + "?sslmode=prefer"
+        )  # Prefer SSL mode
         self.session = sessionmaker(bind=self.engine)()
 
     def execute_query(self, query: str, sql_params: dict = None):
@@ -89,7 +95,7 @@ class SQLAlchemyDiffaDatabase(Database):
     def execute_non_query(self, query, params: dict = None):
         self.connect()
         try:
-            with self.session.begin(): # Ensures transaction integrity
+            with self.session.begin():  # Ensures transaction integrity
                 self.session.execute(query, params)
         finally:
             self.close()
@@ -97,17 +103,64 @@ class SQLAlchemyDiffaDatabase(Database):
     def close(self):
         self.session.close()
 
-    def get_invalid_diff_records(self) -> Iterable[DiffRecordSchema]:
+    def get_latest_valid_diff_check(
+        self,
+        source_database: str,
+        source_schema: str,
+        source_table: str,
+        target_database: str,
+        target_schema: str,
+        target_table: str,
+        start_date: datetime,
+        end_date: datetime,
+    ) -> Iterable[DiffRecordSchema]:
         """Get all invalid diff records"""
         self.connect()
         try:
-            diff_records = (
+            diff_record = (
                 self.session.query(DiffRecord)
-                .filter(DiffRecord.status == "invalid")
-                .all()
+                .filter(DiffRecord.status == "valid")
+                .filter(DiffRecord.source_database == source_database)
+                .filter(DiffRecord.source_schema == source_schema)
+                .filter(DiffRecord.source_table == source_table)
+                .filter(DiffRecord.target_database == target_database)
+                .filter(DiffRecord.target_schema == target_schema)
+                .filter(DiffRecord.target_table == target_table)
+                .filter(DiffRecord.start_check_date == start_date)
+                .filter(DiffRecord.end_check_date == end_date)
+                .order_by(DiffRecord.created_at.desc())
+                .first()
             )
-            for record in diff_records:
-                yield DiffRecordSchema.model_validate(record)
+            return DiffRecordSchema.model_validate(diff_record) if diff_record else None
+        finally:
+            self.close()
+
+    def get_number_of_checks(
+        self,
+        source_database: str,
+        source_schema: str,
+        source_table: str,
+        target_database: str,
+        target_schema: str,
+        target_table: str,
+        start_date: datetime,
+        end_date: datetime,
+    ) -> int:
+        """Get the number of checks for a specific table"""
+        self.connect()
+        try:
+            return (
+                self.session.query(DiffRecord)
+                .filter(DiffRecord.source_database == source_database)
+                .filter(DiffRecord.source_schema == source_schema)
+                .filter(DiffRecord.source_table == source_table)
+                .filter(DiffRecord.target_database == target_database)
+                .filter(DiffRecord.target_schema == target_schema)
+                .filter(DiffRecord.target_table == target_table)
+                .filter(DiffRecord.start_check_date == start_date)
+                .filter(DiffRecord.end_check_date == end_date)
+                .count()
+            )
         finally:
             self.close()
 
@@ -120,4 +173,3 @@ class SQLAlchemyDiffaDatabase(Database):
             self.session.commit()
         finally:
             self.close()
-
