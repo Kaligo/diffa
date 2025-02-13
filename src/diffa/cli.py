@@ -189,8 +189,7 @@ def inspect_diff_history(
     )
     diff_service = DiffaService()
     has_valid = diff_service.inspect_diff_history(start_date, end_date)
-    click.echo(json.dumps({"is_diff": not has_valid}, indent=4))
-
+    click.echo(json.dumps({"is_diff": not has_valid}), err=False)
 
 @cli.command()
 def migrate():
