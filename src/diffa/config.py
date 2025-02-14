@@ -138,13 +138,13 @@ class ConfigManager:
         return self.__parse_db_config(db_key=db_key)
 
     def get_database(self, db_key: str):
-        return self.config[db_key]["database"]
+        return self.__parse_db_config(db_key)["database"]
 
     def get_schema(self, db_key: str):
-        return self.config[db_key]["schema"]
+        return self.__parse_db_config(db_key)["schema"]
 
     def get_table(self, db_key: str):
-        return self.config[db_key]["table"]
+        return self.__parse_db_config(db_key)["table"]
 
     def get_db_info(self, db_key: str):
         return self.config[db_key]["db_info"]
