@@ -168,7 +168,7 @@ def configure():
     type=click.DateTime(formats=["%Y-%m-%d %H:%M:%S"]),
     help="End date to check with format YYYY-MM-DD HH:MM:SS.",
 )
-def inspect_diff_history(
+def verify_diff_status(
     *,
     source_database: str = None,
     source_schema: str = "public",
@@ -188,8 +188,64 @@ def inspect_diff_history(
         target_table=target_table,
     )
     diff_service = DiffaService()
-    has_valid = diff_service.inspect_diff_history(start_date, end_date)
+    has_valid = diff_service.verify_diff_status(start_date, end_date)
     click.echo(json.dumps({"is_diff": not has_valid}), err=False)
+
+@cli.command()
+@click.option(
+    "--source-database",
+    type=str,
+    help="Source database name.",
+)
+@click.option(
+    "--source-schema",
+    type=str,
+    help="Source table schema (default: public).",
+    default="public",
+)
+@click.option(
+    "--source-table",
+    required=True,
+    type=str,
+    help="Source table name.",
+)
+@click.option(
+    "--target-database",
+    type=str,
+    help="Target database name.",
+)
+@click.option(
+    "--target-schema",
+    type=str,
+    help="Target table schema (default: public).",
+    default="public",
+)
+@click.option(
+    "--target-table",
+    required=True,
+    type=str,
+    help="Target table name.",
+)
+def find_unreconciled_interval(
+    *,
+    source_database: str = None,
+    source_schema: str = "public",
+    source_table: str,
+    target_database: str = None,
+    target_schema: str = "public",
+    target_table: str,
+):
+    ConfigManager().configure(
+        source_database=source_database,
+        source_schema=source_schema,
+        source_table=source_table,
+        target_database=target_database,
+        target_schema=target_schema,
+        target_table=target_table,
+    )
+    diff_service = DiffaService()
+    oldest_unreconciled_interval = diff_service.get_oldest_pending_reconciliation()
+    click.echo(json.dumps(oldest_unreconciled_interval), err=False)
 
 @cli.command()
 def migrate():

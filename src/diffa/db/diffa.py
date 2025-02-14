@@ -163,6 +163,76 @@ class SQLAlchemyDiffaDatabase(Database):
             )
         finally:
             self.close()
+    
+    def get_unrecociled_diff_checks(
+        self,
+        source_database: str,
+        source_schema: str,
+        source_table: str,
+        target_database: str,
+        target_schema: str,
+        target_table: str
+    ) -> Iterable[DiffRecordSchema]:
+        """Get all invalid diff records"""
+        self.connect()
+        try:
+            diff_records = (
+                self.session.query(
+                    DiffRecord.source_database,
+                    DiffRecord.source_schema,
+                    DiffRecord.source_table,
+                    DiffRecord.target_database,
+                    DiffRecord.target_schema,
+                    DiffRecord.target_table,
+                    DiffRecord.start_check_date,
+                    DiffRecord.end_check_date
+                )
+                .filter(DiffRecord.source_database == source_database)
+                .filter(DiffRecord.source_schema == source_schema)
+                .filter(DiffRecord.source_table == source_table)
+                .filter(DiffRecord.target_database == target_database)
+                .filter(DiffRecord.target_schema == target_schema)
+                .filter(DiffRecord.target_table == target_table)
+                .filter(DiffRecord.status == "invalid")
+                .distinct(
+                    DiffRecord.source_database,
+                    DiffRecord.source_schema,
+                    DiffRecord.source_table,
+                    DiffRecord.target_database,
+                    DiffRecord.target_schema,
+                    DiffRecord.target_table,
+                    DiffRecord.start_check_date,
+                    DiffRecord.end_check_date
+                )
+                .order_by(
+                    DiffRecord.start_check_date.desc(),
+                    DiffRecord.end_check_date.desc()
+                )
+                .yield_per(10)
+            )
+            for diff_record in diff_records:
+                logger.info(f"Checking diff record: {diff_record}")
+                existed_valid_check = (
+                    self.session.query(DiffRecord)
+                    .filter(DiffRecord.source_database == source_database)
+                    .filter(DiffRecord.source_schema == source_schema)
+                    .filter(DiffRecord.source_table == source_table)
+                    .filter(DiffRecord.target_database == target_database)
+                    .filter(DiffRecord.target_schema == target_schema)
+                    .filter(DiffRecord.target_table == target_table)
+                    .filter(DiffRecord.start_check_date == diff_record.start_check_date)
+                    .filter(DiffRecord.end_check_date == diff_record.end_check_date)
+                    .filter(DiffRecord.status == "valid")
+                    .first()
+                )
+                if not existed_valid_check:
+                    return (
+                        diff_record.start_check_date.strftime("%Y-%m-%d %H:%M:%S"), 
+                        diff_record.end_check_date.strftime("%Y-%m-%d %H:%M:%S")
+                    )
+            return (None, None)
+        finally:
+            self.close()
 
     def save_diff_record(self, diff_record: DiffRecordSchema):
         """Save a diff record"""

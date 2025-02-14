@@ -63,7 +63,7 @@ class DiffaService:
 
         return True if status == "valid" else False
 
-    def inspect_diff_history(self, start_date: datetime, end_date: datetime):
+    def verify_diff_status(self, start_date: datetime, end_date: datetime):
         """To Check during a specific time range, data is miss or not"""
 
         history_db = SQLAlchemyDiffaDatabase(self.cm.get_db_config("diffa"))
@@ -106,3 +106,22 @@ class DiffaService:
                 f"No valid check found during {start_date} to {end_date}. It's diff !!!"
             )
             return False
+
+    def get_oldest_pending_reconciliation(self):
+        """Get the oldest pending reconciliation"""
+
+        history_db = SQLAlchemyDiffaDatabase(self.cm.get_db_config("diffa"))
+        oldest_start_check_date, oldest_end_check_date = (
+            history_db.get_unrecociled_diff_checks(
+                source_database=self.cm.get_database("source"),
+                source_schema=self.cm.get_schema("source"),
+                source_table=self.cm.get_table("source"),
+                target_database=self.cm.get_database("target"),
+                target_schema=self.cm.get_schema("target"),
+                target_table=self.cm.get_table("target"),
+            )
+        )
+        return {
+            "start_check_date": oldest_start_check_date,
+            "end_check_date": oldest_end_check_date,
+        }
