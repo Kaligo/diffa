@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date
 
 import psycopg2
 import psycopg2.extras
@@ -51,11 +51,11 @@ class PosgrestDatabase(Database):
         finally:
             self.close()
 
-    def get_count(self, start_date: datetime, end_date: datetime):
+    def get_count(self, checking_date: date):
         query = f"""
             SELECT COUNT(*) AS results 
             FROM {self.db_config['schema']}.{self.db_config['table']}
-            WHERE created_at >= '{start_date}' AND created_at < '{end_date}'
+            WHERE created_at::DATE = '{checking_date}'
         """
         try:
             logger.info(f"Querying: {query}")

@@ -1,5 +1,6 @@
 import os
 import json
+from datetime import date
 from enum import Enum
 
 import dsnparse
@@ -10,6 +11,7 @@ CONFIG_DIR = os.path.expanduser("~/.diffa")
 CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
 DIFFA_DB_SCHEMA = "diffa"
 DIFFA_DB_TABLE = "diffa_history"
+DIFFA_BEGIN_DATE = date(2024, 1, 1)
 
 class ExitCode(Enum):
     SUCCESS = 0

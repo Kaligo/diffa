@@ -54,18 +54,6 @@ def cli():
     type=str,
     help="Target table name.",
 )
-@click.option(
-    "--lookback-window",
-    required=True,
-    type=int,
-    help="Lookback window in days.",
-)
-@click.option(
-    "--execution-date",
-    required=True,
-    type=click.DateTime(formats=["%Y-%m-%d"]),
-    help="Execution date with format YYYY-MM-DD.",
-)
 def data_diff(
     *,
     source_database: str = None,
@@ -74,8 +62,6 @@ def data_diff(
     target_database: str = None,
     target_schema: str = "public",
     target_table: str,
-    lookback_window: int,
-    execution_date: datetime,
 ):
     ConfigManager().configure(
         source_database=source_database,
@@ -86,7 +72,7 @@ def data_diff(
         target_table=target_table,
     )
     diff_service = DiffaService()
-    is_not_diff = diff_service.compare_tables(execution_date, lookback_window)
+    is_not_diff = diff_service.compare_tables()
     if is_not_diff:
         click.echo("No difference found.")
         sys.exit(ExitCode.SUCCESS.value)

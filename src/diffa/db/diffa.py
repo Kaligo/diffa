@@ -1,8 +1,8 @@
-from typing import Iterable, Optional
-import uuid
-from datetime import datetime
+from typing import Optional
+from datetime import datetime, date
 
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, MetaData, UUID
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, MetaData, UUID, Date
+from sqlalchemy.sql.functions import now
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from pydantic import BaseModel, model_validator
@@ -16,45 +16,44 @@ logger = Logger(__name__)
 Base = declarative_base()
 config = ConfigManager()
 
+
 class DiffRecord(Base):
     """SQLAlchemy Model for Diffa state management"""
 
     __tablename__ = config.get_table("diffa")
     metadata = MetaData(schema=config.get_schema("diffa"))
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    source_database = Column(String)
-    source_schema = Column(String)
-    source_table = Column(String)
-    target_database = Column(String)
-    target_schema = Column(String)
-    target_table = Column(String)
-    check_date = Column(DateTime)
+    source_database = Column(String, primary_key=True)
+    source_schema = Column(String, primary_key=True)
+    source_table = Column(String, primary_key=True)
+    target_database = Column(String, primary_key=True)
+    target_schema = Column(String, primary_key=True)
+    target_table = Column(String, primary_key=True)
+    check_date = Column(Date)
     source_count = Column(Integer)
     target_count = Column(Integer)
     status = Column(String)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime)
+    updated_at = Column(DateTime, default=now(), onupdate=now())
 
 
 class DiffRecordSchema(BaseModel):
     """Pydantic Model (validation) for Diffa state management"""
 
-    id: Optional[uuid.UUID] = uuid.uuid4()
     source_database: str
     source_schema: str
     source_table: str
     target_database: str
     target_schema: str
     target_table: str
-    check_date: datetime
+    check_date: date
     source_count: int
     target_count: int
     status: str
-    created_at: datetime = datetime.utcnow()
-    updated_at: datetime
+    updated_at: datetime = datetime.utcnow()
 
     class Config:
-        from_attributes = True  # Enable ORM mode to allow loading from SQLAlchemy models
+        from_attributes = (
+            True  # Enable ORM mode to allow loading from SQLAlchemy models
+        )
 
     @model_validator(mode="after")
     def validate_status(self) -> Self:
@@ -62,6 +61,7 @@ class DiffRecordSchema(BaseModel):
         if self.status not in allowed:
             raise ValueError(f"status must be one of {allowed}")
         return self
+
 
 class SQLAlchemyDiffaDatabase(Database):
     """SQLAlchemy Database Adapter for Diffa state management"""
@@ -72,7 +72,9 @@ class SQLAlchemyDiffaDatabase(Database):
         self.session = None
 
     def connect(self):
-        self.engine = create_engine(self.db_config["db_url"] + "?sslmode=prefer") # Prefer SSL mode
+        self.engine = create_engine(
+            self.db_config["db_url"] + "?sslmode=prefer"
+        )  # Prefer SSL mode
         self.session = sessionmaker(bind=self.engine)()
 
     def execute_query(self, query: str, sql_params: dict = None):
@@ -87,7 +89,7 @@ class SQLAlchemyDiffaDatabase(Database):
     def execute_non_query(self, query, params: dict = None):
         self.connect()
         try:
-            with self.session.begin(): # Ensures transaction integrity
+            with self.session.begin():  # Ensures transaction integrity
                 self.session.execute(query, params)
         finally:
             self.close()
@@ -95,17 +97,34 @@ class SQLAlchemyDiffaDatabase(Database):
     def close(self):
         self.session.close()
 
-    def get_invalid_diff_records(self) -> Iterable[DiffRecordSchema]:
-        """Get all invalid diff records"""
+    def get_latest_record(
+        self,
+        source_database: str,
+        source_schema: str,
+        source_table: str,
+        target_database: str,
+        target_schema: str,
+        target_table: str,
+    ) -> Optional[dict]:
+        """Get the mismatch record. If not found, return None"""
         self.connect()
         try:
-            diff_records = (
+            diff_record = (
                 self.session.query(DiffRecord)
-                .filter(DiffRecord.status == "invalid")
-                .all()
+                .filter(DiffRecord.source_database == source_database)
+                .filter(DiffRecord.source_schema == source_schema)
+                .filter(DiffRecord.source_table == source_table)
+                .filter(DiffRecord.target_database == target_database)
+                .filter(DiffRecord.target_schema == target_schema)
+                .filter(DiffRecord.target_table == target_table)
+                .order_by(DiffRecord.updated_at.desc())
+                .first()
             )
-            for record in diff_records:
-                yield DiffRecordSchema.model_validate(record)
+            return (
+                DiffRecordSchema.model_validate(diff_record).model_dump()
+                if diff_record
+                else None
+            )
         finally:
             self.close()
 
@@ -114,8 +133,7 @@ class SQLAlchemyDiffaDatabase(Database):
         self.connect()
         record_dict = diff_record.model_dump()
         try:
-            self.session.add(DiffRecord(**record_dict))
+            self.session.merge(DiffRecord(**record_dict))
             self.session.commit()
         finally:
             self.close()
-
