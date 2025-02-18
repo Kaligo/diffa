@@ -32,7 +32,7 @@ def upgrade() -> None:
         sa.Column("target_database", sa.String, nullable=False, primary_key=True),
         sa.Column("target_schema", sa.String, nullable=False, primary_key=True),
         sa.Column("target_table", sa.String, nullable=False, primary_key=True),
-        sa.Column("check_date", sa.Date, nullable=False),
+        sa.Column("check_date", sa.Date, nullable=False, primary_key=True),
         sa.Column("source_count", sa.Integer, nullable=False),
         sa.Column("target_count", sa.Integer, nullable=False),
         sa.Column("status", sa.String, nullable=False),

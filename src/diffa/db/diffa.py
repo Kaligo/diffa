@@ -28,7 +28,7 @@ class DiffRecord(Base):
     target_database = Column(String, primary_key=True)
     target_schema = Column(String, primary_key=True)
     target_table = Column(String, primary_key=True)
-    check_date = Column(Date)
+    check_date = Column(Date, primary_key=True)
     source_count = Column(Integer)
     target_count = Column(Integer)
     status = Column(String)
