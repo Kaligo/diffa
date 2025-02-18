@@ -33,13 +33,12 @@ def upgrade() -> None:
         sa.Column("target_database", sa.String, nullable=False),
         sa.Column("target_schema", sa.String, nullable=False),
         sa.Column("target_table", sa.String, nullable=False),
-        sa.Column("start_check_date", sa.DateTime, nullable=False),
-        sa.Column("end_check_date", sa.DateTime, nullable=False),
+        sa.Column("check_date", sa.DateTime, nullable=False),
         sa.Column("source_count", sa.Integer, nullable=False),
         sa.Column("target_count", sa.Integer, nullable=False),
         sa.Column("status", sa.String, nullable=False),
         sa.Column("created_at", sa.DateTime, nullable=False),
-        sa.Column("last_reconciled_at", sa.DateTime, nullable=True),
+        sa.Column("updated_at", sa.DateTime, nullable=False),
         schema=config_manager.get_schema("diffa"),
     )
 

@@ -28,13 +28,12 @@ class DiffRecord(Base):
     target_database = Column(String)
     target_schema = Column(String)
     target_table = Column(String)
-    start_check_date = Column(DateTime)
-    end_check_date = Column(DateTime)
+    check_date = Column(DateTime)
     source_count = Column(Integer)
     target_count = Column(Integer)
     status = Column(String)
     created_at = Column(DateTime, default=datetime.utcnow)
-    last_reconciled_at = Column(DateTime)
+    updated_at = Column(DateTime)
 
 
 class DiffRecordSchema(BaseModel):
@@ -47,20 +46,19 @@ class DiffRecordSchema(BaseModel):
     target_database: str
     target_schema: str
     target_table: str
-    start_check_date: datetime
-    end_check_date: datetime
+    check_date: datetime
     source_count: int
     target_count: int
     status: str
     created_at: datetime = datetime.utcnow()
-    last_reconciled_at: Optional[datetime] = None
+    updated_at: datetime
 
     class Config:
         from_attributes = True  # Enable ORM mode to allow loading from SQLAlchemy models
 
     @model_validator(mode="after")
     def validate_status(self) -> Self:
-        allowed = {"valid", "invalid", "reconciled"}
+        allowed = {"match", "mismatch"}
         if self.status not in allowed:
             raise ValueError(f"status must be one of {allowed}")
         return self
