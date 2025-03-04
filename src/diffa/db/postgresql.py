@@ -1,10 +1,11 @@
-from datetime import datetime, date
+from datetime import date
+from typing import List
 
 import psycopg2
 import psycopg2.extras
 
 from diffa.utils import Logger
-from diffa.db.base import Database
+from diffa.db.base import Database, CountCheck
 
 logger = Logger(__name__)
 
@@ -24,7 +25,7 @@ class PosgrestDatabase(Database):
                 database=self.db_config["database"],
                 user=self.db_config["user"],
                 password=self.db_config["password"],
-                sslmode="prefer", # Prefer SSL mode
+                sslmode="prefer",  # Prefer SSL mode
             )
             self.conn.set_session(autocommit=True)
 
@@ -51,18 +52,32 @@ class PosgrestDatabase(Database):
         finally:
             self.close()
 
-    def get_count(self, checking_date: date):
+    def get_counts(self, latest_check_date: date, invalid_check_dates: List[date]):
+        backfill_where_clause = (
+            f" (created_at::DATE IN ({','.join([f"'{date}'" for date in invalid_check_dates])}))"
+            if invalid_check_dates
+            else ""
+        )
+        catchup_where_clause = f"""(
+            created_at::DATE > '{latest_check_date}'
+            AND 
+            created_at::DATE <= CURRENT_DATE - INTERVAL '2 DAY' 
+        ) OR
+        """
         query = f"""
-            SELECT COUNT(*) AS results 
+            SELECT 
+                created_at::DATE as check_date,
+                COUNT(*) AS cnt 
             FROM {self.db_config['schema']}.{self.db_config['table']}
-            WHERE created_at::DATE = '{checking_date}'
+            WHERE
+                {catchup_where_clause}
+                {backfill_where_clause}
+            GROUP BY created_at::DATE
+            ORDER BY created_at::DATE ASC
         """
         try:
-            logger.info(f"Querying: {query}")
-            result = int(
-                list(self.execute_query(query))[0]["results"]
-            )
-            logger.info(f"Result of the query '{query}': {result}")
-            return result
+            logger.info(f"Executing query: {query}")
+            for row in self.execute_query(query):
+                yield CountCheck(**row)
         finally:
             self.close()

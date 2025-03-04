@@ -1,13 +1,23 @@
-from typing import Optional, List
+from typing import Optional, List, Iterable
 import uuid
 from datetime import datetime, date
 
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, MetaData, UUID, Date, Boolean
+from sqlalchemy import (
+    create_engine,
+    Column,
+    Integer,
+    String,
+    DateTime,
+    MetaData,
+    UUID,
+    Date,
+    Boolean,
+)
 from sqlalchemy.sql.functions import now
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
-from pydantic import BaseModel, model_validator
-from typing_extensions import Self
+from sqlalchemy.dialects.postgresql import insert
+from pydantic import BaseModel
 
 from diffa.config import ConfigManager
 from diffa.db.base import Database
@@ -35,14 +45,13 @@ class DiffaCheck(Base):
     target_count = Column(Integer)
     is_valid = Column(Boolean)
     diff_count = Column(Integer)
-    created_at = Column(DateTime)
-    updated_at = Column(DateTime)
+    created_at = Column(DateTime, server_default=now())
+    updated_at = Column(DateTime, onupdate=now(), server_default=now())
 
 
 class DiffaCheckSchema(BaseModel):
     """Pydantic Model (validation) for Diffa state management"""
 
-    id: Optional[uuid.UUID] = uuid.uuid4()
     source_database: str
     source_schema: str
     source_table: str
@@ -54,20 +63,12 @@ class DiffaCheckSchema(BaseModel):
     target_count: int
     is_valid: bool
     diff_count: int
-    created_at: datetime = datetime.utcnow()
-    updated_at: Optional[datetime] = None
 
     class Config:
         from_attributes = (
             True  # Enable ORM mode to allow loading from SQLAlchemy models
         )
         validate_assignment = True
-    
-    @model_validator(mode="after")
-    def updated_at_validator(self, values):
-        if values["updated_at"] is None:
-            values["updated_at"] = values["created_at"]
-        return values
 
 
 class SQLAlchemyDiffaDatabase(Database):
@@ -134,7 +135,7 @@ class SQLAlchemyDiffaDatabase(Database):
             )
         finally:
             self.close()
-    
+
     def get_invalid_checks(
         self,
         source_database: str,
@@ -146,7 +147,7 @@ class SQLAlchemyDiffaDatabase(Database):
     ) -> List[DiffaCheckSchema]:
         self.connect()
         try:
-            records = (
+            invalid_checks = (
                 self.session.query(DiffaCheck)
                 .filter(DiffaCheck.source_database == source_database)
                 .filter(DiffaCheck.source_schema == source_schema)
@@ -154,18 +155,43 @@ class SQLAlchemyDiffaDatabase(Database):
                 .filter(DiffaCheck.target_database == target_database)
                 .filter(DiffaCheck.target_schema == target_schema)
                 .filter(DiffaCheck.target_table == target_table)
-                .filter(DiffaCheck.status == "invalid")
+                .filter(DiffaCheck.is_valid is False)
                 .all()
             )
+            for invalid_check in invalid_checks:
+                yield DiffaCheckSchema.model_validate(invalid_check).model_dump()
         finally:
             self.close()
 
-    def save_diffa_check(self, diffa_check_schema: DiffaCheckSchema):
+    def upsert_diffa_checks(self, diffa_check_schemas: Iterable[DiffaCheckSchema]):
         """Save a diff record"""
         self.connect()
-        diffa_check = diffa_check_schema.model_dump()
         try:
-            self.session.merge(DiffaCheck(**diffa_check))
+            diffa_checks = [
+                DiffaCheck(**diffa_check) for diffa_check in diffa_check_schemas
+            ]
+            stmt = insert(DiffaCheck).values(diffa_checks)
+            stmt = stmt.on_conflict_do_update(
+                index_elements=[
+                    DiffaCheck.source_database,
+                    DiffaCheck.source_schema,
+                    DiffaCheck.source_table,
+                    DiffaCheck.target_database,
+                    DiffaCheck.target_schema,
+                    DiffaCheck.target_table,
+                    DiffaCheck.check_date,
+                ],
+                set_={
+                    "source_count": stmt.excluded.source_count,
+                    "target_count": stmt.excluded.target_count,
+                    "is_valid": stmt.excluded.is_valid,
+                    "diff_count": stmt.excluded.diff_count,
+                    "check_date": stmt.excluded.check_date,
+                },
+            )
+
+            self.session.execute(stmt)
             self.session.commit()
+            logger.info(f"Upserted {len(diffa_checks)} records successfully!")
         finally:
             self.close()

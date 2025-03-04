@@ -71,16 +71,7 @@ def data_diff(
         target_schema=target_schema,
         target_table=target_table,
     )
-    diff_service = DiffaService()
-    is_not_diff = diff_service.compare_tables()
-    if is_not_diff:
-        click.echo("No difference found.")
-        sys.exit(ExitCode.SUCCESS.value)
-    else:
-        # This is for Airflow to recognize the failure due to diff
-        click.echo("Data is mismatched between Source and DW")
-        sys.exit(ExitCode.DIFF.value)
-
+    DiffaService().compare_tables()
 
 @cli.command()
 def configure():
