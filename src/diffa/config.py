@@ -10,7 +10,7 @@ from diffa.utils import Logger
 CONFIG_DIR = os.path.expanduser("~/.diffa")
 CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
 DIFFA_DB_SCHEMA = "diffa"
-DIFFA_DB_TABLE = "diffa_history"
+DIFFA_DB_TABLE = "diffa_checks"
 DIFFA_BEGIN_DATE = date(2024, 1, 1)
 
 class ExitCode(Enum):

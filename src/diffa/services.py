@@ -3,7 +3,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from diffa.db.factory import DatabaseFactory
 from diffa.config import ConfigManager, DIFFA_BEGIN_DATE
-from diffa.db.diffa import DiffRecordSchema, SQLAlchemyDiffaDatabase
+from diffa.db.diffa import DiffaCheckSchema, SQLAlchemyDiffaDatabase
 from diffa.utils import Logger
 
 logger = Logger(__name__)
@@ -38,7 +38,7 @@ class DiffaService:
         logger.info(
             f"Source count: {source_count}, Target count: {target_count}, Status: {status}"
         )
-        diff_record = DiffRecordSchema(
+        diffa_check_schema = DiffaCheckSchema(
             source_database=source_db.db_config["database"],
             source_schema=source_db.db_config["schema"],
             source_table=source_db.db_config["table"],
@@ -50,7 +50,7 @@ class DiffaService:
             target_count=target_count,
             status=status,
         )
-        history_db.save_diff_record(diff_record)
+        history_db.save_diffa_check(diffa_check_schema)
 
         return True if status == "match" else False
 
@@ -58,7 +58,7 @@ class DiffaService:
         today_date = date.today()
 
         history_db = SQLAlchemyDiffaDatabase(self.cm.get_db_config("diffa"))
-        latest_record = history_db.get_latest_record(
+        latest_check = history_db.get_latest_check(
             source_database=self.cm.get_database("source"),
             source_schema=self.cm.get_schema("source"),
             source_table=self.cm.get_table("source"),
@@ -67,16 +67,16 @@ class DiffaService:
             target_table=self.cm.get_table("target"),
         )
 
-        if latest_record:
-            if latest_record["status"] == "match":
-                logical_next_date = latest_record["check_date"] + timedelta(days=1)
+        if latest_check:
+            if latest_check["status"] == "match":
+                logical_next_date = latest_check["check_date"] + timedelta(days=1)
                 yesterday_date = today_date - timedelta(days=1)
                 return (
                     logical_next_date
                     if logical_next_date < yesterday_date
                     else yesterday_date
                 )
-            elif latest_record["status"] == "mismatch":
-                return latest_record["check_date"]
+            elif latest_check["status"] == "mismatch":
+                return latest_check["check_date"]
         else:
             return DIFFA_BEGIN_DATE

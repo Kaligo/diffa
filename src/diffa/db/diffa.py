@@ -1,7 +1,8 @@
-from typing import Optional
+from typing import Optional, List
+import uuid
 from datetime import datetime, date
 
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, MetaData, UUID, Date
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, MetaData, UUID, Date, Boolean
 from sqlalchemy.sql.functions import now
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
@@ -17,11 +18,12 @@ Base = declarative_base()
 config = ConfigManager()
 
 
-class DiffRecord(Base):
+class DiffaCheck(Base):
     """SQLAlchemy Model for Diffa state management"""
 
     __tablename__ = config.get_table("diffa")
     metadata = MetaData(schema=config.get_schema("diffa"))
+    id = Column(UUID, primary_key=True, default=uuid.uuid4)
     source_database = Column(String, primary_key=True)
     source_schema = Column(String, primary_key=True)
     source_table = Column(String, primary_key=True)
@@ -31,13 +33,16 @@ class DiffRecord(Base):
     check_date = Column(Date, primary_key=True)
     source_count = Column(Integer)
     target_count = Column(Integer)
-    status = Column(String)
-    updated_at = Column(DateTime, default=now(), onupdate=now())
+    is_valid = Column(Boolean)
+    diff_count = Column(Integer)
+    created_at = Column(DateTime)
+    updated_at = Column(DateTime)
 
 
-class DiffRecordSchema(BaseModel):
+class DiffaCheckSchema(BaseModel):
     """Pydantic Model (validation) for Diffa state management"""
 
+    id: Optional[uuid.UUID] = uuid.uuid4()
     source_database: str
     source_schema: str
     source_table: str
@@ -47,20 +52,22 @@ class DiffRecordSchema(BaseModel):
     check_date: date
     source_count: int
     target_count: int
-    status: str
-    updated_at: datetime = datetime.utcnow()
+    is_valid: bool
+    diff_count: int
+    created_at: datetime = datetime.utcnow()
+    updated_at: Optional[datetime] = None
 
     class Config:
         from_attributes = (
             True  # Enable ORM mode to allow loading from SQLAlchemy models
         )
-
+        validate_assignment = True
+    
     @model_validator(mode="after")
-    def validate_status(self) -> Self:
-        allowed = {"match", "mismatch"}
-        if self.status not in allowed:
-            raise ValueError(f"status must be one of {allowed}")
-        return self
+    def updated_at_validator(self, values):
+        if values["updated_at"] is None:
+            values["updated_at"] = values["created_at"]
+        return values
 
 
 class SQLAlchemyDiffaDatabase(Database):
@@ -97,7 +104,7 @@ class SQLAlchemyDiffaDatabase(Database):
     def close(self):
         self.session.close()
 
-    def get_latest_record(
+    def get_latest_check(
         self,
         source_database: str,
         source_schema: str,
@@ -106,34 +113,59 @@ class SQLAlchemyDiffaDatabase(Database):
         target_schema: str,
         target_table: str,
     ) -> Optional[dict]:
-        """Get the mismatch record. If not found, return None"""
+        """Get the latest invalid check. If not found, return None"""
         self.connect()
         try:
-            diff_record = (
-                self.session.query(DiffRecord)
-                .filter(DiffRecord.source_database == source_database)
-                .filter(DiffRecord.source_schema == source_schema)
-                .filter(DiffRecord.source_table == source_table)
-                .filter(DiffRecord.target_database == target_database)
-                .filter(DiffRecord.target_schema == target_schema)
-                .filter(DiffRecord.target_table == target_table)
-                .order_by(DiffRecord.updated_at.desc())
+            diffa_check = (
+                self.session.query(DiffaCheck)
+                .filter(DiffaCheck.source_database == source_database)
+                .filter(DiffaCheck.source_schema == source_schema)
+                .filter(DiffaCheck.source_table == source_table)
+                .filter(DiffaCheck.target_database == target_database)
+                .filter(DiffaCheck.target_schema == target_schema)
+                .filter(DiffaCheck.target_table == target_table)
+                .order_by(DiffaCheck.check_date.desc())
                 .first()
             )
             return (
-                DiffRecordSchema.model_validate(diff_record).model_dump()
-                if diff_record
+                DiffaCheckSchema.model_validate(diffa_check).model_dump()
+                if diffa_check
                 else None
             )
         finally:
             self.close()
+    
+    def get_invalid_checks(
+        self,
+        source_database: str,
+        source_schema: str,
+        source_table: str,
+        target_database: str,
+        target_schema: str,
+        target_table: str,
+    ) -> List[DiffaCheckSchema]:
+        self.connect()
+        try:
+            records = (
+                self.session.query(DiffaCheck)
+                .filter(DiffaCheck.source_database == source_database)
+                .filter(DiffaCheck.source_schema == source_schema)
+                .filter(DiffaCheck.source_table == source_table)
+                .filter(DiffaCheck.target_database == target_database)
+                .filter(DiffaCheck.target_schema == target_schema)
+                .filter(DiffaCheck.target_table == target_table)
+                .filter(DiffaCheck.status == "invalid")
+                .all()
+            )
+        finally:
+            self.close()
 
-    def save_diff_record(self, diff_record: DiffRecordSchema):
+    def save_diffa_check(self, diffa_check_schema: DiffaCheckSchema):
         """Save a diff record"""
         self.connect()
-        record_dict = diff_record.model_dump()
+        diffa_check = diffa_check_schema.model_dump()
         try:
-            self.session.merge(DiffRecord(**record_dict))
+            self.session.merge(DiffaCheck(**diffa_check))
             self.session.commit()
         finally:
             self.close()
