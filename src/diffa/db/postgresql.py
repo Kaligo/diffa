@@ -54,7 +54,7 @@ class PosgrestDatabase(Database):
 
     def get_counts(self, latest_check_date: date, invalid_check_dates: List[date]):
         backfill_where_clause = (
-            f" (created_at::DATE IN ({','.join([f"'{date}'" for date in invalid_check_dates])}))"
+            f" (created_at::DATE IN ({','.join([f"'{date}'" for date in invalid_check_dates])})) OR"
             if invalid_check_dates
             else ""
         )
@@ -62,7 +62,7 @@ class PosgrestDatabase(Database):
             created_at::DATE > '{latest_check_date}'
             AND 
             created_at::DATE <= CURRENT_DATE - INTERVAL '2 DAY' 
-        ) OR
+        )
         """
         query = f"""
             SELECT 

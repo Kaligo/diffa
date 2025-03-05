@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, date
+from dataclasses import dataclass, field
 from typing import Iterable, Optional
 from concurrent.futures import ThreadPoolExecutor
 
@@ -11,11 +12,14 @@ from diffa.utils import Logger
 logger = Logger(__name__)
 
 
+@dataclass
 class MergedCountCheck:
-    def __init__(self, source_count: int, target_count: int, check_date: date):
-        self.source_count = source_count
-        self.target_count = target_count
-        self.check_date = check_date
+    source_count: int
+    target_count: int
+    check_date: date
+    is_valid: bool = field(init=False)
+
+    def __post_init__(self):
         self.is_valid = True if self.source_count <= self.target_count else False
 
     @classmethod
@@ -66,6 +70,7 @@ class MergedCountCheck:
             source_count=self.source_count,
             target_count=self.target_count,
             is_valid=self.is_valid,
+            diff_count=self.target_count - self.source_count
         )
 
 
@@ -154,9 +159,6 @@ class DiffaService:
          Output [(1,0), (2,2), (0,4), (5,5), (6,0), (0,7)]
         """
 
-        def get_next_count(counts: Iterable[CountCheck]):
-            return next(counts, None)
-
         db_infos = {
             "source_database": self.cm.get_database("source"),
             "source_schema": self.cm.get_schema("source"),
@@ -165,33 +167,19 @@ class DiffaService:
             "target_schema": self.cm.get_schema("target"),
             "target_table": self.cm.get_table("target"),
         }
-        source_count = get_next_count(source_counts)
-        target_count = get_next_count(target_counts)
-        while source_count or target_count:
-            if source_count and target_count:
-                if source_count.date == target_count.date:
-                    yield MergedCountCheck.from_counts(
-                        source_count, target_count
-                    ).to_DiffaCheckSchema(**db_infos)
-                    source_count = get_next_count(source_counts)
-                    target_count = get_next_count(target_counts)
-                elif source_count.date < target_count.date:
-                    yield MergedCountCheck.from_counts(
-                        source_count, None
-                    ).to_DiffaCheckSchema(**db_infos)
-                    source_count = get_next_count(source_counts)
-                else:
-                    yield MergedCountCheck.from_counts(
-                        None, target_count
-                    ).to_DiffaCheckSchema(**db_infos)
-                    target_count = get_next_count(target_counts)
-            elif source_count:
-                yield MergedCountCheck.from_counts(
-                    source_count, None
-                ).to_DiffaCheckSchema(**db_infos)
-                source_count = get_next_count(source_counts)
-            else:
-                yield MergedCountCheck.from_counts(
-                    None, target_count
-                ).to_DiffaCheckSchema(**db_infos)
-                target_count = get_next_count(target_counts)
+
+        source_dict = {count.check_date: count for count in source_counts}
+        target_dict = {count.check_date: count for count in target_counts}
+
+        all_dates = set(source_dict.keys()) | set(target_dict.keys())
+
+        merged_count_check_schemas = []
+        for check_date in all_dates:
+            source_count = source_dict.get(check_date)
+            target_count = target_dict.get(check_date)
+            merged_count_check = MergedCountCheck.from_counts(
+                source_count, target_count
+            ).to_DiffaCheckSchema(**db_infos)
+            merged_count_check_schemas.append(merged_count_check)
+
+        return merged_count_check_schemas

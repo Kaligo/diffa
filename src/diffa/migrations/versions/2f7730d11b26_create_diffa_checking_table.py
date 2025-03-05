@@ -26,7 +26,7 @@ def upgrade() -> None:
     op.execute(f"CREATE SCHEMA IF NOT EXISTS {config_manager.get_schema('diffa')}")
     op.create_table(
         f"{config_manager.get_table('diffa')}",
-        sa.Column("id", sa.UUID, primary_key=True),
+        sa.Column("id", sa.String, primary_key=True),
         sa.Column("source_database", sa.String, nullable=False),
         sa.Column("source_schema", sa.String, nullable=False),
         sa.Column("source_table", sa.String, nullable=False),
@@ -36,11 +36,10 @@ def upgrade() -> None:
         sa.Column("check_date", sa.Date, nullable=False),
         sa.Column("source_count", sa.Integer, nullable=False),
         sa.Column("target_count", sa.Integer, nullable=False),
-        sa.Column("status", sa.String, nullable=False),
         sa.Column("is_valid", sa.Boolean, nullable=False),
         sa.Column("diff_count", sa.Integer, nullable=False),
-        sa.Column("created_at", sa.DateTime, nullable=False),
-        sa.Column("updated_at", sa.DateTime, nullable=False),
+        sa.Column("created_at", sa.DateTime, server_default=sa.func.now(), nullable=False),
+        sa.Column("updated_at", sa.DateTime, server_default=sa.func.now(), onupdate=sa.func.now(), nullable=False),
         schema=config_manager.get_schema("diffa"),
     )
 
