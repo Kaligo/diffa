@@ -15,6 +15,7 @@ logger = Logger(__name__)
 Base = declarative_base()
 config = ConfigManager()
 
+
 class SQLAlchemyDiffaDatabase(Database):
     """SQLAlchemy Database Adapter for Diffa state management"""
 

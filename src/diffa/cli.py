@@ -72,6 +72,7 @@ def data_diff(
     )
     DiffaService().compare_tables()
 
+
 @cli.command()
 def configure():
     config_manager = ConfigManager()
@@ -96,12 +97,14 @@ def configure():
     click.echo("Configuration saved to successfully.")
     sys.exit(ExitCode.SUCCESS.value)
 
+
 @cli.command()
 def migrate():
     alembic_cfg = Config(os.path.join(SCRIPT_DIR, "migrations", "alembic.ini"))
     command.upgrade(alembic_cfg, "head")
     click.echo("Database migration completed successfully.")
     sys.exit(ExitCode.SUCCESS.value)
+
 
 if __name__ == "__main__":
     cli()

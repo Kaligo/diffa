@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 
+
 class Database(ABC):
     """Base class for all database adapters"""
 

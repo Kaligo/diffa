@@ -22,6 +22,7 @@ logger = Logger(__name__)
 Base = declarative_base()
 config = ConfigManager()
 
+
 class DiffaCheck(Base):
     """SQLAlchemy Model for Diffa state management"""
 
@@ -93,6 +94,7 @@ class DiffaCheckSchema(BaseModel):
             )
         return self
 
+
 @dataclass
 class CountCheck:
     """A single count check in Source/Target Database"""
@@ -100,9 +102,10 @@ class CountCheck:
     cnt: int
     check_date: date
 
+
 @dataclass
 class MergedCountCheck:
-    """ A merged count check after checking count in Source/Target Databases """
+    """A merged count check after checking count in Source/Target Databases"""
 
     source_count: int
     target_count: int
@@ -137,19 +140,16 @@ class MergedCountCheck:
         target_schema: str,
         target_table: str,
     ) -> DiffaCheckSchema:
-        """ Convert the merged count check to a DiffaCheckSchema """
+        """Convert the merged count check to a DiffaCheckSchema"""
 
-        logger.info(
-            f"""
-            Merging result:
-                Source: {source_database}.{source_schema}.{source_table}
-                Target: {target_database}.{target_schema}.{target_table}
-                Source Count: {self.source_count}
-                Target Count: {self.target_count}
-                Check Date: {self.check_date}
-                Is Valid: {self.is_valid}
-            """
-        )
+        if not self.is_valid:
+            logger.info(
+                "Diff: "
+                f"Source Count: {self.source_count}, "
+                f"Target Count: {self.target_count}, "
+                f"Check Date: {self.check_date}, "
+                f"Is Valid: {self.is_valid} "
+            )
 
         return DiffaCheckSchema(
             source_database=source_database,
@@ -162,5 +162,5 @@ class MergedCountCheck:
             source_count=self.source_count,
             target_count=self.target_count,
             is_valid=self.is_valid,
-            diff_count=self.target_count - self.source_count
+            diff_count=self.target_count - self.source_count,
         )

@@ -13,10 +13,12 @@ DIFFA_DB_SCHEMA = "diffa"
 DIFFA_DB_TABLE = "diffa_checks"
 DIFFA_BEGIN_DATE = date(2024, 1, 1)
 
+
 class ExitCode(Enum):
     SUCCESS = 0
-    DIFF = 4 # Data mismatch detected
-    ERROR = 1 # Unexpected error (e.g., network, infra issues)
+    DIFF = 4  # Data mismatch detected
+    ERROR = 1  # Unexpected error (e.g., network, infra issues)
+
 
 logger = Logger(__name__)
 
@@ -100,18 +102,16 @@ class ConfigManager:
                 uri_config = json.load(f)
 
         self.config["source"].update(
-            {
-                "db_info": os.getenv("DIFFA__SOURCE_URI", uri_config.get("source_uri"))
-            }
+            {"db_info": os.getenv("DIFFA__SOURCE_URI", uri_config.get("source_uri"))}
         )
         self.config["target"].update(
-            {
-                "db_info": os.getenv("DIFFA__TARGET_URI", uri_config.get("target_uri"))
-            }
+            {"db_info": os.getenv("DIFFA__TARGET_URI", uri_config.get("target_uri"))}
         )
         self.config["diffa"].update(
             {
-                "db_info": os.getenv("DIFFA__DIFFA_DB_URI", uri_config.get("diffa_uri")),
+                "db_info": os.getenv(
+                    "DIFFA__DIFFA_DB_URI", uri_config.get("diffa_uri")
+                ),
             }
         )
 
@@ -122,7 +122,9 @@ class ConfigManager:
             db_schema = self.config[db_key]["schema"]
             db_table = self.config[db_key]["table"]
         except TypeError:
-            logger.error(f"There's something wrong with the db info for {db_key}", exc_info=True)
+            logger.error(
+                f"There's something wrong with the db info for {db_key}", exc_info=True
+            )
             raise
         return {
             "host": dns.host,

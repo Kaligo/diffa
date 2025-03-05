@@ -7,6 +7,7 @@ from diffa.utils import Logger
 
 logger = Logger(__name__)
 
+
 class DiffaService:
     def __init__(self):
 
@@ -14,10 +15,13 @@ class DiffaService:
         self.db_handler = DatabaseHandler(self.cm)
 
     def compare_tables(self):
-        """ Data-diff comparison service """
+        """Data-diff comparison service"""
 
         logger.info(
-            f"Starting diffa comparison for source: {self.cm.get_database('source')}.{self.cm.get_table('source')}"
+            f"""Starting diffa comparison for:
+                - Source: {self.cm.get_database('source')}.{self.cm.get_schema('source')}.{self.cm.get_table('source')}
+                - Target: {self.cm.get_database('target')}.{self.cm.get_schema('target')}.{self.cm.get_table('target')}
+            """
         )
 
         # Step 1: Get the last check date (for backfill mechanism)
@@ -27,7 +31,9 @@ class DiffaService:
         invalid_check_dates = self.db_handler.get_invalid_check_dates()
 
         # Step 3: Compare and merge the counts from the source and target databases
-        source_counts, target_counts = self.db_handler.get_counts(last_check_date, invalid_check_dates)
+        source_counts, target_counts = self.db_handler.get_counts(
+            last_check_date, invalid_check_dates
+        )
         merged_count_check_schemas = self.__merge_count_checks(
             source_counts, target_counts
         )
