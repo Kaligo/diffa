@@ -76,7 +76,7 @@ class DatabaseHandler:
             invalid_check["check_date"] for invalid_check in invalid_checks
         ]
         if len(invalid_check_dates) > 0:
-            logger.info(f"Invalid check dates: {invalid_check_dates}")
+            logger.info(f"The number of invalid check dates is: {len(invalid_check_dates)}")
             return invalid_check_dates
         else:
             logger.info("No invalid check dates found")
