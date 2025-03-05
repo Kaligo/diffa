@@ -1,101 +1,19 @@
 from typing import Optional, List, Iterable
-import hashlib
-from datetime import date
 
-from sqlalchemy import (
-    create_engine,
-    Column,
-    Integer,
-    String,
-    MetaData,
-    Date,
-    Boolean,
-)
+from sqlalchemy import create_engine
 from sqlalchemy.sql.functions import now
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.dialects.postgresql import insert
-from pydantic import BaseModel, model_validator
 
-from diffa.config import ConfigManager
 from diffa.db.base import Database
+from diffa.db.data_models import DiffaCheckSchema, DiffaCheck
+from diffa.config import ConfigManager
 from diffa.utils import Logger
 
 logger = Logger(__name__)
 Base = declarative_base()
 config = ConfigManager()
-
-
-class DiffaCheck(Base):
-    """SQLAlchemy Model for Diffa state management"""
-
-    __tablename__ = config.get_table("diffa")
-    metadata = MetaData(schema=config.get_schema("diffa"))
-    id = Column(String, primary_key=True)
-    source_database = Column(String, primary_key=True)
-    source_schema = Column(String, primary_key=True)
-    source_table = Column(String, primary_key=True)
-    target_database = Column(String, primary_key=True)
-    target_schema = Column(String, primary_key=True)
-    target_table = Column(String, primary_key=True)
-    check_date = Column(Date, primary_key=True)
-    source_count = Column(Integer)
-    target_count = Column(Integer)
-    is_valid = Column(Boolean)
-    diff_count = Column(Integer)
-
-
-class DiffaCheckSchema(BaseModel):
-    """Pydantic Model (validation) for Diffa state management"""
-
-    id: str = None
-    source_database: str
-    source_schema: str
-    source_table: str
-    target_database: str
-    target_schema: str
-    target_table: str
-    check_date: date
-    source_count: int
-    target_count: int
-    is_valid: bool
-    diff_count: int
-
-    @classmethod
-    def create_id(
-        cls,
-        source_database: str,
-        source_schema: str,
-        source_table: str,
-        target_database: str,
-        target_schema: str,
-        target_table: str,
-        check_date: date,
-    ):
-        """Create a unique ID for the diffa check"""
-        hash_input = f"{source_database}{source_schema}{source_table}{target_database}{target_schema}{target_table}{check_date}"
-        return hashlib.sha256(hash_input.encode()).hexdigest()
-
-    class Config:
-        from_attributes = (
-            True  # Enable ORM mode to allow loading from SQLAlchemy models
-        )
-        validate_assignment = True
-
-    @model_validator(mode="after")
-    def set_id_if_missing(self):
-        if self.id is None:
-            self.id = self.create_id(
-                self.source_database,
-                self.source_schema,
-                self.source_table,
-                self.target_database,
-                self.target_schema,
-                self.target_table,
-                self.check_date,
-            )
-        return self
-
 
 class SQLAlchemyDiffaDatabase(Database):
     """SQLAlchemy Database Adapter for Diffa state management"""
@@ -197,7 +115,6 @@ class SQLAlchemyDiffaDatabase(Database):
                 diffa_check.model_dump() for diffa_check in diffa_check_schemas
             ]
             if len(diffa_checks) > 0:
-                updated_time = now()
                 stmt = insert(DiffaCheck).values(diffa_checks)
                 stmt = stmt.on_conflict_do_update(
                     index_elements=[DiffaCheck.id],
@@ -207,7 +124,7 @@ class SQLAlchemyDiffaDatabase(Database):
                         "is_valid": stmt.excluded.is_valid,
                         "diff_count": stmt.excluded.diff_count,
                         "check_date": stmt.excluded.check_date,
-                        "updated_at": updated_time,
+                        "updated_at": now(),
                     },
                 )
 

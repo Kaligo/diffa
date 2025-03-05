@@ -5,7 +5,7 @@ import psycopg2
 import psycopg2.extras
 
 from diffa.utils import Logger
-from diffa.db.base import Database, CountCheck
+from diffa.db.base import Database
 
 logger = Logger(__name__)
 
@@ -77,7 +77,6 @@ class PosgrestDatabase(Database):
         """
         try:
             logger.info(f"Executing query: {query}")
-            for row in self.execute_query(query):
-                yield CountCheck(**row)
+            return self.execute_query(query)
         finally:
             self.close()

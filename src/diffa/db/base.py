@@ -1,15 +1,4 @@
 from abc import ABC, abstractmethod
-from datetime import date
-from dataclasses import dataclass
-
-
-@dataclass
-class CountCheck:
-    """A single count check in Source/Target Database"""
-
-    cnt: int
-    check_date: date
-
 
 class Database(ABC):
     """Base class for all database adapters"""
