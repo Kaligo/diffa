@@ -70,8 +70,8 @@ class PosgrestDatabase(Database):
                 COUNT(*) AS cnt 
             FROM {self.db_config['schema']}.{self.db_config['table']}
             WHERE
-                {catchup_where_clause}
                 {backfill_where_clause}
+                {catchup_where_clause}
             GROUP BY created_at::DATE
             ORDER BY created_at::DATE ASC
         """

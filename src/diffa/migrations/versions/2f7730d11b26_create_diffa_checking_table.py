@@ -39,7 +39,7 @@ def upgrade() -> None:
         sa.Column("is_valid", sa.Boolean, nullable=False),
         sa.Column("diff_count", sa.Integer, nullable=False),
         sa.Column("created_at", sa.DateTime, server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime, server_default=sa.func.now(), onupdate=sa.func.now(), nullable=False),
+        sa.Column("updated_at", sa.DateTime, server_default=sa.func.now(), nullable=False),
         schema=config_manager.get_schema("diffa"),
     )
 

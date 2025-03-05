@@ -181,7 +181,7 @@ class SQLAlchemyDiffaDatabase(Database):
                 .filter(DiffaCheck.target_database == target_database)
                 .filter(DiffaCheck.target_schema == target_schema)
                 .filter(DiffaCheck.target_table == target_table)
-                .filter(DiffaCheck.is_valid is False)
+                .filter(DiffaCheck.is_valid == False)
                 .all()
             )
             for invalid_check in invalid_checks:
@@ -197,6 +197,7 @@ class SQLAlchemyDiffaDatabase(Database):
                 diffa_check.model_dump() for diffa_check in diffa_check_schemas
             ]
             if len(diffa_checks) > 0:
+                updated_time = now()
                 stmt = insert(DiffaCheck).values(diffa_checks)
                 stmt = stmt.on_conflict_do_update(
                     index_elements=[DiffaCheck.id],
@@ -206,6 +207,7 @@ class SQLAlchemyDiffaDatabase(Database):
                         "is_valid": stmt.excluded.is_valid,
                         "diff_count": stmt.excluded.diff_count,
                         "check_date": stmt.excluded.check_date,
+                        "updated_at": updated_time,
                     },
                 )
 
