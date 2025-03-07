@@ -51,7 +51,7 @@ class DiffaService:
             )
         )
 
-        # Step 5: Detect if there are any invalid diff between source and target
+        # Return True if there is any invalid diff
         return self.__check_if_invalid_diff(merged_count_checks)
 
     def __check_if_invalid_diff(
