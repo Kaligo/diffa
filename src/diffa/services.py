@@ -15,7 +15,7 @@ class DiffaService:
         self.db_handler = DatabaseHandler(self.cm)
 
     def compare_tables(self):
-        """Data-diff comparison service"""
+        """Data-diff comparison service. Will return True if there is any invalid diff."""
 
         logger.info(
             f"""Starting diffa comparison for:
@@ -34,12 +34,33 @@ class DiffaService:
         source_counts, target_counts = self.db_handler.get_counts(
             last_check_date, invalid_check_dates
         )
-        merged_count_check_schemas = self.__merge_count_checks(
-            source_counts, target_counts
-        )
+        merged_count_checks = self.__merge_count_checks(source_counts, target_counts)
 
         # Step 4: Save the merged count checks to the diffa database
-        self.db_handler.save_diffa_checks(merged_count_check_schemas)
+        self.db_handler.save_diffa_checks(
+            map(
+                lambda merged_count_check: merged_count_check.to_diffa_check_schema(
+                    source_database=self.cm.get_database("source"),
+                    source_schema=self.cm.get_schema("source"),
+                    source_table=self.cm.get_table("source"),
+                    target_database=self.cm.get_database("target"),
+                    target_schema=self.cm.get_schema("target"),
+                    target_table=self.cm.get_table("target"),
+                ),
+                merged_count_checks,
+            )
+        )
+
+        # Step 5: Detect if there are any invalid diff between source and target
+        return self.__check_if_invalid_diff(merged_count_checks)
+
+    def __check_if_invalid_diff(
+        self, merged_count_checks: Iterable[MergedCountCheck]
+    ) -> bool:
+        for merged_count_check in merged_count_checks:
+            if not merged_count_check.is_valid:
+                return True
+        return False
 
     def __merge_count_checks(
         self, source_counts: Iterable[CountCheck], target_counts: Iterable[CountCheck]
@@ -52,27 +73,18 @@ class DiffaService:
          Output [(1,0), (2,2), (0,4), (5,5), (6,0), (0,7)]
         """
 
-        db_infos = {
-            "source_database": self.cm.get_database("source"),
-            "source_schema": self.cm.get_schema("source"),
-            "source_table": self.cm.get_table("source"),
-            "target_database": self.cm.get_database("target"),
-            "target_schema": self.cm.get_schema("target"),
-            "target_table": self.cm.get_table("target"),
-        }
-
         source_dict = {count.check_date: count for count in source_counts}
         target_dict = {count.check_date: count for count in target_counts}
 
         all_dates = set(source_dict.keys()) | set(target_dict.keys())
 
-        merged_count_check_schemas = []
+        merged_count_checks = []
         for check_date in all_dates:
             source_count = source_dict.get(check_date)
             target_count = target_dict.get(check_date)
             merged_count_check = MergedCountCheck.from_counts(
                 source_count, target_count
-            ).to_diffa_check_schema(**db_infos)
-            merged_count_check_schemas.append(merged_count_check)
+            )
+            merged_count_checks.append(merged_count_check)
 
-        return merged_count_check_schemas
+        return merged_count_checks

@@ -15,9 +15,7 @@ DIFFA_BEGIN_DATE = date(2024, 1, 1)
 
 
 class ExitCode(Enum):
-    SUCCESS = 0
-    DIFF = 4  # Data mismatch detected
-    ERROR = 1  # Unexpected error (e.g., network, infra issues)
+    INVALID_DIFF = 4  # Invalid diff detected
 
 
 logger = Logger(__name__)

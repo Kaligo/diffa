@@ -70,7 +70,11 @@ def data_diff(
         target_schema=target_schema,
         target_table=target_table,
     )
-    DiffaService().compare_tables()
+    if DiffaService().compare_tables():
+        click.echo("There is an invalid diff between source and target.")
+        sys.exit(ExitCode.INVALID_DIFF.value)
+    else:
+        click.echo("There is no invalid diff between source and target.")
 
 
 @cli.command()
@@ -95,7 +99,6 @@ def configure():
         json.dump(config, f, indent=4)
 
     click.echo("Configuration saved to successfully.")
-    sys.exit(ExitCode.SUCCESS.value)
 
 
 @cli.command()
@@ -103,7 +106,6 @@ def migrate():
     alembic_cfg = Config(os.path.join(SCRIPT_DIR, "migrations", "alembic.ini"))
     command.upgrade(alembic_cfg, "head")
     click.echo("Database migration completed successfully.")
-    sys.exit(ExitCode.SUCCESS.value)
 
 
 if __name__ == "__main__":

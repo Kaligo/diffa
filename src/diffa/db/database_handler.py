@@ -4,7 +4,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from diffa.db.factory import DatabaseFactory
 from diffa.db.diffa import SQLAlchemyDiffaDatabase
-from diffa.db.data_models import CountCheck, MergedCountCheck
+from diffa.db.data_models import CountCheck, DiffaCheckSchema
 from diffa.config import ConfigManager, DIFFA_BEGIN_DATE
 from diffa.utils import Logger
 
@@ -82,7 +82,7 @@ class DatabaseHandler:
             logger.info("No invalid check dates found")
             return None
 
-    def save_diffa_checks(self, merged_count_check_schemas: Iterable[MergedCountCheck]):
+    def save_diffa_checks(self, merged_count_check_schemas: Iterable[DiffaCheckSchema]):
         """Upsert all the merged count checks to the diffa database"""
 
         self.diffa_db.upsert_diffa_checks(merged_count_check_schemas)
