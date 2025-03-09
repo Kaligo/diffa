@@ -1,5 +1,6 @@
-import pytest
 from datetime import datetime
+
+import pytest
 
 from diffa.services import DiffaService
 from diffa.db.data_models import CountCheck, MergedCountCheck
