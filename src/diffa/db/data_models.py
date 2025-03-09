@@ -114,6 +114,16 @@ class MergedCountCheck:
 
     def __post_init__(self):
         self.is_valid = True if self.source_count <= self.target_count else False
+    
+    def __eq__(self, other):
+        if not isinstance(other, MergedCountCheck):
+            return NotImplemented
+        return (
+            self.source_count == other.source_count and
+            self.target_count == other.target_count and
+            self.check_date == other.check_date and
+            self.is_valid == other.is_valid
+        )
 
     @classmethod
     def from_counts(

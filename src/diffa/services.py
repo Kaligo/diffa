@@ -34,7 +34,7 @@ class DiffaService:
         source_counts, target_counts = self.db_handler.get_counts(
             last_check_date, invalid_check_dates
         )
-        merged_count_checks = self.__merge_count_checks(source_counts, target_counts)
+        merged_count_checks = self._merge_count_checks(source_counts, target_counts)
 
         # Step 4: Save the merged count checks to the diffa database
         self.db_handler.save_diffa_checks(
@@ -52,9 +52,9 @@ class DiffaService:
         )
 
         # Return True if there is any invalid diff
-        return self.__check_if_invalid_diff(merged_count_checks)
+        return self._check_if_invalid_diff(merged_count_checks)
 
-    def __check_if_invalid_diff(
+    def _check_if_invalid_diff(
         self, merged_count_checks: Iterable[MergedCountCheck]
     ) -> bool:
         for merged_count_check in merged_count_checks:
@@ -62,7 +62,7 @@ class DiffaService:
                 return True
         return False
 
-    def __merge_count_checks(
+    def _merge_count_checks(
         self, source_counts: Iterable[CountCheck], target_counts: Iterable[CountCheck]
     ) -> Iterable[MergedCountCheck]:
         """
