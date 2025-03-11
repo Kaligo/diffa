@@ -22,17 +22,18 @@ class ExitCode(Enum):
 
 logger = Logger(__name__)
 
+
 class BaseConfig(ABC):
     def __init__(self, db_info: str = None, database: str = None):
         self.db_info = db_info
         self.database = database
         self.parsed_db_info = None
-    
+
     def update(self, **kwargs):
         for key, value in kwargs.items():
             if hasattr(self, key) and value is not None:
                 setattr(self, key, value)
-    
+
     def parse_db_info(self):
         if not self.parsed_db_info:
             try:
@@ -42,7 +43,7 @@ class BaseConfig(ABC):
                 logger.error("Invalid db info", exc_info=True)
                 raise
         return self.parsed_db_info
-    
+
     @abstractmethod
     def _extract_db_details(self, dns):
         pass
@@ -58,7 +59,7 @@ class BaseConfig(ABC):
 
     def get_db_info(self):
         return self.db_info
-    
+
     def get_table(self):
         return self.get_db_config().get("table")
 
@@ -103,16 +104,16 @@ class SourceTargetConfig(BaseConfig):
         db_schema = self.schema or dns.schema
         db_table = self.table or dns.table
         return {
-                "host": dns.host,
-                "scheme": dns.scheme,
-                "port": dns.port,
-                "database": db_database,
-                "user": dns.username,
-                "password": dns.password,
-                "schema": db_schema,
-                "table": db_table,
-                "db_url": f"{dns.scheme}://{dns.username}:{dns.password}@{dns.host}:{dns.port}/{db_database}",
-            }
+            "host": dns.host,
+            "scheme": dns.scheme,
+            "port": dns.port,
+            "database": db_database,
+            "user": dns.username,
+            "password": dns.password,
+            "schema": db_schema,
+            "table": db_table,
+            "db_url": f"{dns.scheme}://{dns.username}:{dns.password}@{dns.host}:{dns.port}/{db_database}",
+        }
 
 
 class DiffaDBConfig(BaseConfig):
@@ -127,17 +128,16 @@ class DiffaDBConfig(BaseConfig):
     def _extract_db_details(self, dns):
         db_database = self.database or dns.database
         return {
-                "host": dns.host,
-                "scheme": dns.scheme,
-                "port": dns.port,
-                "database": db_database,
-                "user": dns.username,
-                "password": dns.password,
-                "schema": self.schema,
-                "tables": self.tables,
-                "db_url": f"{dns.scheme}://{dns.username}:{dns.password}@{dns.host}:{dns.port}/{db_database}",
-            }
-
+            "host": dns.host,
+            "scheme": dns.scheme,
+            "port": dns.port,
+            "database": db_database,
+            "user": dns.username,
+            "password": dns.password,
+            "schema": self.schema,
+            "tables": self.tables,
+            "db_url": f"{dns.scheme}://{dns.username}:{dns.password}@{dns.host}:{dns.port}/{db_database}",
+        }
 
     def get_table(self, table_key: str):
         return self.get_db_config()["tables"][table_key]
