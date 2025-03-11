@@ -76,29 +76,6 @@ class SourceTargetConfig(BaseConfig):
         self.schema = schema
         self.table = table
 
-    def parse_db_info(self):
-        if not self.parsed_db_info:
-            try:
-                dns = dsnparse.parse(self.db_info)
-                db_database = self.database or dns.database
-                db_schema = self.schema or dns.schema
-                db_table = self.table or dns.table
-            except TypeError:
-                logger.error("Invalid db info", exc_info=True)
-                raise
-            self.parsed_db_info = {
-                "host": dns.host,
-                "scheme": dns.scheme,
-                "port": dns.port,
-                "database": db_database,
-                "user": dns.username,
-                "password": dns.password,
-                "schema": db_schema,
-                "table": db_table,
-                "db_url": f"{dns.scheme}://{dns.username}:{dns.password}@{dns.host}:{dns.port}/{db_database}",
-            }
-        return self.parsed_db_info
-
     def _extract_db_details(self, dns):
         db_database = self.database or dns.database
         db_schema = self.schema or dns.schema
