@@ -25,7 +25,7 @@ config_manager = ConfigManager()
 def upgrade() -> None:
     op.execute(f"CREATE SCHEMA IF NOT EXISTS {config_manager.get_schema('diffa')}")
     op.create_table(
-        f"{config_manager.get_table('diffa')}",
+        f"{config_manager.get_table('diffa', 'checks')}",
         sa.Column("id", sa.String, primary_key=True),
         sa.Column("source_database", sa.String, nullable=False),
         sa.Column("source_schema", sa.String, nullable=False),

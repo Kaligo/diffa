@@ -26,7 +26,7 @@ config = ConfigManager()
 class DiffaCheck(Base):
     """SQLAlchemy Model for Diffa state management"""
 
-    __tablename__ = config.get_table("diffa")
+    __tablename__ = config.get_table("diffa", "checks")
     metadata = MetaData(schema=config.get_schema("diffa"))
     id = Column(String, primary_key=True)
     source_database = Column(String, primary_key=True)
