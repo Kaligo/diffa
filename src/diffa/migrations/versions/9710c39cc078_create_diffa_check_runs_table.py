@@ -37,6 +37,6 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     op.drop_table(
-        f"{config_manager.get_table('diffa')}",
+        f"{config_manager.get_table('diffa', 'check_runs')}",
         schema=config_manager.get_schema("diffa"),
     )
