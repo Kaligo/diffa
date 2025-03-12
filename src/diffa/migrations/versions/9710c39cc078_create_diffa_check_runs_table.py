@@ -29,13 +29,27 @@ def upgrade() -> None:
         sa.Column("source", sa.String, nullable=False),
         sa.Column("target", sa.String, nullable=False),
         sa.Column("status", sa.String, nullable=False),
-        sa.Column("created_at", sa.DateTime, nullable=False),
-        sa.Column("updated_at", sa.DateTime, nullable=False),
+        sa.Column("created_at", sa.DateTime, server_default=sa.func.now(), nullable=False),
+        sa.Column("updated_at", sa.DateTime, server_default=sa.func.now(), nullable=False),
         schema=config_manager.get_schema("diffa"),
+    )
+    op.create_index(
+        "idx_unique_running_check_runs",
+        table_name=f"{config_manager.get_table('diffa', 'check_runs')}",
+        columns=["source", "target"],
+        unique=True,
+        schema=config_manager.get_schema("diffa"),
+        postgresql_where=sa.text("status = 'RUNNING'"),
     )
 
 
 def downgrade() -> None:
+    op.drop_index(
+        "idx_unique_running_check_runs",
+        table_name=f"{config_manager.get_table('diffa', 'check_runs')}",
+        schema=config_manager.get_schema("diffa"),
+        if_exists=True,
+    )
     op.drop_table(
         f"{config_manager.get_table('diffa', 'check_runs')}",
         schema=config_manager.get_schema("diffa"),
