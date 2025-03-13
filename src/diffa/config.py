@@ -78,8 +78,6 @@ class SourceTargetConfig(BaseConfig):
 
     def _extract_db_details(self, dns):
         db_database = self.database or dns.database
-        db_schema = self.schema or dns.schema
-        db_table = self.table or dns.table
         return {
             "host": dns.host,
             "scheme": dns.scheme,
@@ -87,8 +85,8 @@ class SourceTargetConfig(BaseConfig):
             "database": db_database,
             "user": dns.username,
             "password": dns.password,
-            "schema": db_schema,
-            "table": db_table,
+            "schema": self.schema,
+            "table": self.table,
             "db_url": f"{dns.scheme}://{dns.username}:{dns.password}@{dns.host}:{dns.port}/{db_database}",
         }
 
