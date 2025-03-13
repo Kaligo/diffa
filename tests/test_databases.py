@@ -1,7 +1,7 @@
 import pytest
 
 from src.diffa.db.factory import DatabaseFactory
-from src.diffa.db.diffa import SQLAlchemyDiffaDatabase
+from src.diffa.db.diffa import DiffaCheckDatabase
 from src.diffa.config import ConfigManager
 
 @pytest.fixture(scope="module")
@@ -24,7 +24,7 @@ def target_database(config):
 
 @pytest.fixture(scope="module")
 def diffa_database(config):
-    db = SQLAlchemyDiffaDatabase(config.get_db_config('diffa'))
+    db = DiffaCheckDatabase(config.get_db_config('diffa', table_key="diffa"))
     db.connect()
     yield db
     db.close()

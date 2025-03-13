@@ -115,31 +115,37 @@ class DiffaDBConfig(BaseConfig):
             "tables": self.tables,
             "db_url": f"{dns.scheme}://{dns.username}:{dns.password}@{dns.host}:{dns.port}/{db_database}",
         }
+    
+    def parse_db_info(self, table_key: str = None):
+        if not self.parsed_db_info:
+            try:
+                dns = dsnparse.parse(self.db_info)
+                self.parsed_db_info = self._extract_db_details(dns)
+            except TypeError:
+                logger.error("Invalid db info", exc_info=True)
+                raise
+        self.parsed_db_info["table"] = self.tables[table_key] if table_key else None
+        return self.parsed_db_info
 
+    def get_db_config(self, table_key: str = None):
+        return self.parse_db_info(table_key)
+    
     def get_table(self, table_key: str):
-        return self.get_db_config()["tables"][table_key]
+        return self.get_db_config(table_key)["table"]
 
 
 class ConfigManager:
-    """Singleton Pattern for ConfigManager to ensure that the config is loaded only once"""
-
-    _instance = None
-
-    def __new__(cls, *args, **kwargs):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
+    """Manage all the configuration needed for Diffa Operations"""
 
     def __init__(
         self,
     ):
-        if not hasattr(self, "config"):
-            self.config = {
-                "source": SourceTargetConfig(),
-                "target": SourceTargetConfig(),
-                "diffa": DiffaDBConfig(),
-            }
-            self.__load_config()
+        self.config = {
+            "source": SourceTargetConfig(),
+            "target": SourceTargetConfig(),
+            "diffa": DiffaDBConfig(),
+        }
+        self.__load_config()
 
     def configure(
         self,

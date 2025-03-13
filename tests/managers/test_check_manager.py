@@ -2,13 +2,14 @@ from datetime import datetime
 
 import pytest
 
-from diffa.services import DiffaService
+from diffa.managers.check_manager import CheckManager
+from diffa.config import ConfigManager
 from diffa.db.data_models import CountCheck, MergedCountCheck
 
 
 @pytest.fixture
-def diffa_service():
-    return DiffaService()
+def check_manager():
+    return CheckManager(ConfigManager())
 
 
 @pytest.mark.parametrize(
@@ -79,9 +80,9 @@ def diffa_service():
     ],
 )
 def test__merge_count_check(
-    diffa_service, source_counts, target_counts, expected_merged_counts
+    check_manager, source_counts, target_counts, expected_merged_counts
 ):
-    merged_counts = diffa_service._merge_count_checks(source_counts, target_counts)
+    merged_counts = check_manager._merge_count_checks(source_counts, target_counts)
     assert expected_merged_counts == merged_counts
 
 
@@ -138,6 +139,6 @@ def test__merge_count_check(
         ],
     ],
 )
-def test__check_if_invalid_diff(diffa_service, merged_count_checks, expected_result):
-    is_invalid_diff = diffa_service._check_if_invalid_diff(merged_count_checks)
+def test__check_if_invalid_diff(check_manager, merged_count_checks, expected_result):
+    is_invalid_diff = check_manager._check_if_invalid_diff(merged_count_checks)
     assert is_invalid_diff == expected_result

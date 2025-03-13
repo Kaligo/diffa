@@ -102,17 +102,25 @@ class DiffaCheckRun(Base):
     __tablename__ = config.get_table("diffa", "check_runs")
     metadata = MetaData(schema=config.get_schema("diffa"))
     run_id = Column(UUID, primary_key=True)
-    source = Column(String)
-    target = Column(String)
+    source_database = Column(String)
+    source_schema = Column(String)
+    source_table = Column(String)
+    target_database = Column(String)
+    target_schema = Column(String)
+    target_table = Column(String)
     status = Column(String)
     updated_at = Column(DateTime, default=datetime.utcnow)
 
 class DiffaCheckRunSchema(BaseModel):
     """Pydantic Model (validation) for Diffa state management"""
 
-    run_id: UUID =  None
-    source: str
-    target: str
+    run_id: uuid.UUID =  None
+    source_database: str
+    source_schema: str
+    source_table: str
+    target_database: str
+    target_schema: str
+    target_table: str
     status: str
 
     @classmethod
@@ -130,6 +138,12 @@ class DiffaCheckRunSchema(BaseModel):
     def set_id_if_missing(self):
         if self.run_id is None:
             self.run_id = self.create_id()
+        return self
+
+    @model_validator(mode="after")
+    def validate_status(self):
+        if self.status not in ["RUNNING", "COMPLETED", "FAILED"]:
+            raise ValueError(f"Invalid status: {self.status}")
         return self
 
 @dataclass
