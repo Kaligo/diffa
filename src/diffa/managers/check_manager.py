@@ -16,6 +16,8 @@ class CheckManager:
         self.diffa_check_handler = DiffaCheckHandler(self.cm)
     
     def data_diff(self):
+        """This will interupt the process when there are invalid diff found."""
+
         if self.compare_tables():
             raise InvalidDiffException
 
