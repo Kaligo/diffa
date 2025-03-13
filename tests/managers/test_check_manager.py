@@ -15,7 +15,7 @@ def check_manager():
 @pytest.mark.parametrize(
     "source_counts, target_counts, expected_merged_counts",
     [
-        # case 1: Checking dates are in both source and target
+        # Case 1: Checking dates are in both source and target
         (
             [
                 CountCheck(
@@ -37,7 +37,7 @@ def check_manager():
                 )
             ]
         ),
-        # case 2: Checking dates are in source only
+        # Case 2: Checking dates are in source only
         (
             [
                 CountCheck(
@@ -54,7 +54,7 @@ def check_manager():
                 )
             ]
         ),
-        # case 3: Checking dates are in target only
+        # Case 3: Checking dates are in target only
         (
             [],
             [
@@ -71,7 +71,7 @@ def check_manager():
                 )
             ]
         ),
-        # case 4: Checking dates are in neither source nor target
+        # Case 4: Checking dates are in neither source nor target
         (
             [],
             [],
@@ -89,7 +89,7 @@ def test__merge_count_check(
 @pytest.mark.parametrize(
     "merged_count_checks, expected_result",
     [
-        # case 1: All merged count checks are valid
+        # Case 1: All merged count checks are valid
         [
             [
                 MergedCountCheck(
@@ -105,7 +105,7 @@ def test__merge_count_check(
             ],
             False,
         ],
-        # case 2: All merged count checks are invalid
+        # Case 2: All merged count checks are invalid
         [
             [
                 MergedCountCheck(
@@ -116,7 +116,7 @@ def test__merge_count_check(
             ],
             True,
         ],
-        # case 3: Mixed valid and invalid merged count checks
+        # Case 3: Mixed valid and invalid merged count checks
         [
             [
                 MergedCountCheck(

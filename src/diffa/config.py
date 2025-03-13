@@ -39,13 +39,19 @@ class BaseConfig(ABC):
             try:
                 dns = dsnparse.parse(self.db_info)
                 self.parsed_db_info = self._extract_db_details(dns)
+                self._validate_parsed_db_info(self.parsed_db_info)
             except TypeError:
                 logger.error("Invalid db info", exc_info=True)
                 raise
         return self.parsed_db_info
+    
+    def _validate_parsed_db_info(self, parsed_db_info: dict):
+        for key, value in parsed_db_info.items():
+            if not value:
+                raise ValueError(f"Configuration for {key} is missing. Please provide it!")
 
     @abstractmethod
-    def _extract_db_details(self, dns):
+    def _extract_db_details(self, dns) -> dict:
         pass
 
     def get_db_config(self):
