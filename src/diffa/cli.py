@@ -81,14 +81,14 @@ def data_diff(
 
         click.echo("There is no invalid diff between source and target.")
         run_manager.complete_run()
-    except RunningCheckRunsException as e:
-        raise e
+    except RunningCheckRunsException:
+        raise
     except InvalidDiffException:
         click.echo("There is an invalid diff between source and target.")
         sys.exit(ExitCode.INVALID_DIFF.value)
-    except Exception as e:
+    except Exception:
         run_manager.fail_run()
-        raise e
+        raise
 
 
 @cli.command()
