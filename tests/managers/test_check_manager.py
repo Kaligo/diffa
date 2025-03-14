@@ -2,19 +2,20 @@ from datetime import datetime
 
 import pytest
 
-from diffa.services import DiffaService
+from diffa.managers.check_manager import CheckManager
 from diffa.db.data_models import CountCheck, MergedCountCheck
+from common import get_test_config_manager
 
 
 @pytest.fixture
-def diffa_service():
-    return DiffaService()
+def check_manager():
+    return CheckManager(config_manager=get_test_config_manager())
 
 
 @pytest.mark.parametrize(
     "source_counts, target_counts, expected_merged_counts",
     [
-        # case 1: Checking dates are in both source and target
+        # Case 1: Checking dates are in both source and target
         (
             [
                 CountCheck(
@@ -32,11 +33,11 @@ def diffa_service():
                 MergedCountCheck(
                     source_count=100,
                     target_count=200,
-                    check_date=datetime.strptime("2024-01-01", "%Y-%m-%d").date()
+                    check_date=datetime.strptime("2024-01-01", "%Y-%m-%d").date(),
                 )
-            ]
+            ],
         ),
-        # case 2: Checking dates are in source only
+        # Case 2: Checking dates are in source only
         (
             [
                 CountCheck(
@@ -51,9 +52,9 @@ def diffa_service():
                     target_count=0,
                     check_date=datetime.strptime("2024-01-01", "%Y-%m-%d").date(),
                 )
-            ]
+            ],
         ),
-        # case 3: Checking dates are in target only
+        # Case 3: Checking dates are in target only
         (
             [],
             [
@@ -68,27 +69,23 @@ def diffa_service():
                     target_count=200,
                     check_date=datetime.strptime("2024-01-01", "%Y-%m-%d").date(),
                 )
-            ]
+            ],
         ),
-        # case 4: Checking dates are in neither source nor target
-        (
-            [],
-            [],
-            []
-        ),
+        # Case 4: Checking dates are in neither source nor target
+        ([], [], []),
     ],
 )
 def test__merge_count_check(
-    diffa_service, source_counts, target_counts, expected_merged_counts
+    check_manager, source_counts, target_counts, expected_merged_counts
 ):
-    merged_counts = diffa_service._merge_count_checks(source_counts, target_counts)
+    merged_counts = check_manager._merge_count_checks(source_counts, target_counts)
     assert expected_merged_counts == merged_counts
 
 
 @pytest.mark.parametrize(
     "merged_count_checks, expected_result",
     [
-        # case 1: All merged count checks are valid
+        # Case 1: All merged count checks are valid
         [
             [
                 MergedCountCheck(
@@ -104,7 +101,7 @@ def test__merge_count_check(
             ],
             False,
         ],
-        # case 2: All merged count checks are invalid
+        # Case 2: All merged count checks are invalid
         [
             [
                 MergedCountCheck(
@@ -115,7 +112,7 @@ def test__merge_count_check(
             ],
             True,
         ],
-        # case 3: Mixed valid and invalid merged count checks
+        # Case 3: Mixed valid and invalid merged count checks
         [
             [
                 MergedCountCheck(
@@ -138,6 +135,6 @@ def test__merge_count_check(
         ],
     ],
 )
-def test__check_if_invalid_diff(diffa_service, merged_count_checks, expected_result):
-    is_invalid_diff = diffa_service._check_if_invalid_diff(merged_count_checks)
+def test__check_if_invalid_diff(check_manager, merged_count_checks, expected_result):
+    is_invalid_diff = check_manager._check_if_invalid_diff(merged_count_checks)
     assert is_invalid_diff == expected_result
