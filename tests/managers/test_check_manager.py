@@ -3,15 +3,18 @@ from datetime import datetime
 import pytest
 
 from diffa.managers.check_manager import CheckManager
-from diffa.config import ConfigManager
 from diffa.db.data_models import CountCheck, MergedCountCheck
+from common import get_test_config_manager
 
 
 @pytest.fixture
-def check_manager():
-    return CheckManager(ConfigManager())
+def check_manager(request):
+    db_scheme = request.param
+    if db_scheme == "postgresql":
+        return CheckManager(config_manager=get_test_config_manager("postgresql"))
 
 
+@pytest.mark.parametrize("check_manager", ["postgresql"], indirect=True)
 @pytest.mark.parametrize(
     "source_counts, target_counts, expected_merged_counts",
     [
@@ -33,9 +36,9 @@ def check_manager():
                 MergedCountCheck(
                     source_count=100,
                     target_count=200,
-                    check_date=datetime.strptime("2024-01-01", "%Y-%m-%d").date()
+                    check_date=datetime.strptime("2024-01-01", "%Y-%m-%d").date(),
                 )
-            ]
+            ],
         ),
         # Case 2: Checking dates are in source only
         (
@@ -52,7 +55,7 @@ def check_manager():
                     target_count=0,
                     check_date=datetime.strptime("2024-01-01", "%Y-%m-%d").date(),
                 )
-            ]
+            ],
         ),
         # Case 3: Checking dates are in target only
         (
@@ -69,14 +72,10 @@ def check_manager():
                     target_count=200,
                     check_date=datetime.strptime("2024-01-01", "%Y-%m-%d").date(),
                 )
-            ]
+            ],
         ),
         # Case 4: Checking dates are in neither source nor target
-        (
-            [],
-            [],
-            []
-        ),
+        ([], [], []),
     ],
 )
 def test__merge_count_check(
@@ -86,6 +85,7 @@ def test__merge_count_check(
     assert expected_merged_counts == merged_counts
 
 
+@pytest.mark.parametrize("check_manager", ["postgresql"], indirect=True)
 @pytest.mark.parametrize(
     "merged_count_checks, expected_result",
     [

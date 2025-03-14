@@ -44,11 +44,13 @@ class BaseConfig(ABC):
                 logger.error("Invalid db info", exc_info=True)
                 raise
         return self.parsed_db_info
-    
+
     def _validate_parsed_db_info(self, parsed_db_info: dict):
         for key, value in parsed_db_info.items():
             if not value:
-                raise ValueError(f"Configuration for {key} is missing. Please provide it!")
+                raise ValueError(
+                    f"Configuration for {key} is missing. Please provide it!"
+                )
 
     @abstractmethod
     def _extract_db_details(self, dns) -> dict:
@@ -119,7 +121,7 @@ class DiffaDBConfig(BaseConfig):
             "tables": self.tables,
             "db_url": f"{dns.scheme}://{dns.username}:{dns.password}@{dns.host}:{dns.port}/{db_database}",
         }
-    
+
     def parse_db_info(self, table_key: str = None):
         if not self.parsed_db_info:
             try:
@@ -133,7 +135,7 @@ class DiffaDBConfig(BaseConfig):
 
     def get_db_config(self, table_key: str = None):
         return self.parse_db_info(table_key)
-    
+
     def get_table(self, table_key: str):
         return self.get_db_config(table_key)["table"]
 
@@ -143,11 +145,14 @@ class ConfigManager:
 
     def __init__(
         self,
+        source_config: SourceTargetConfig = SourceTargetConfig(),
+        target_config: SourceTargetConfig = SourceTargetConfig(),
+        diffa_config: DiffaDBConfig = DiffaDBConfig(),
     ):
         self.config = {
-            "source": SourceTargetConfig(),
-            "target": SourceTargetConfig(),
-            "diffa": DiffaDBConfig(),
+            "source": source_config,
+            "target": target_config,
+            "diffa": diffa_config,
         }
         self.__load_config()
 
@@ -188,13 +193,16 @@ class ConfigManager:
                 uri_config = json.load(f)
 
         self.config["source"].update(
-            db_info=os.getenv("DIFFA__SOURCE_URI", uri_config.get("source_uri"))
+            db_info=self.config["source"].db_info
+            or os.getenv("DIFFA__SOURCE_URI", uri_config.get("source_uri"))
         )
         self.config["target"].update(
-            db_info=os.getenv("DIFFA__TARGET_URI", uri_config.get("target_uri"))
+            db_info=self.config["target"].db_info
+            or os.getenv("DIFFA__TARGET_URI", uri_config.get("target_uri"))
         )
         self.config["diffa"].update(
-            db_info=os.getenv("DIFFA__DIFFA_DB_URI", uri_config.get("diffa_uri")),
+            db_info=self.config["diffa"].db_info
+            or os.getenv("DIFFA__DIFFA_DB_URI", uri_config.get("diffa_uri")),
         )
 
     def get_db_config(self, db_key: str, *args, **kwargs):

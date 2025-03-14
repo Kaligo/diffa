@@ -1,5 +1,6 @@
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import MagicMock, Mock, patch
 
 from diffa.db.database_handler import DiffaCheckRunHandler
 from diffa.config import ConfigManager

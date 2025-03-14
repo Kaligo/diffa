@@ -156,4 +156,3 @@ def test_diffa_config_parse_db_info(db_info, database, table_key, expected_parse
     parsed_db_config = config.get_db_config(table_key=table_key)
 
     assert parsed_db_config == expected_parsed_config
-
