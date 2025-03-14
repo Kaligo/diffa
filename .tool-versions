@@ -1,0 +1,4 @@
+python 3.12.8
+  # releases: https://www.python.org/downloads/
+poetry 1.8.5
+  # releases: https://github.com/python-poetry/poetry/releases
