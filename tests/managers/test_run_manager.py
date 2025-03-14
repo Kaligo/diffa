@@ -3,18 +3,14 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from diffa.db.database_handler import DiffaCheckRunHandler
-from diffa.config import ConfigManager
 from diffa.utils import RunningCheckRunsException
 from diffa.managers.run_manager import RunManager
+from common import get_test_config_manager
 
 
 @pytest.fixture
-def mock_config_manager() -> MagicMock:
-    mock_cm = MagicMock(spec=ConfigManager)
-    mock_cm.get_database.return_value = "mock_database"
-    mock_cm.get_schema.return_value = "mock_schema"
-    mock_cm.get_table.return_value = "mock_table"
-    return mock_cm
+def config_manager() -> MagicMock:
+    return get_test_config_manager()
 
 
 @pytest.fixture
@@ -23,9 +19,9 @@ def mock_diffa_check_run_handler() -> MagicMock:
 
 
 @pytest.fixture
-def run_manager(mock_config_manager, mock_diffa_check_run_handler):
+def run_manager(config_manager, mock_diffa_check_run_handler):
 
-    run_manager = RunManager(mock_config_manager)
+    run_manager = RunManager(config_manager)
     run_manager.check_run_handler = mock_diffa_check_run_handler
     return run_manager
 

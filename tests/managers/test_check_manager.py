@@ -8,13 +8,10 @@ from common import get_test_config_manager
 
 
 @pytest.fixture
-def check_manager(request):
-    db_scheme = request.param
-    if db_scheme == "postgresql":
-        return CheckManager(config_manager=get_test_config_manager("postgresql"))
+def check_manager():
+    return CheckManager(config_manager=get_test_config_manager())
 
 
-@pytest.mark.parametrize("check_manager", ["postgresql"], indirect=True)
 @pytest.mark.parametrize(
     "source_counts, target_counts, expected_merged_counts",
     [
@@ -85,7 +82,6 @@ def test__merge_count_check(
     assert expected_merged_counts == merged_counts
 
 
-@pytest.mark.parametrize("check_manager", ["postgresql"], indirect=True)
 @pytest.mark.parametrize(
     "merged_count_checks, expected_result",
     [
