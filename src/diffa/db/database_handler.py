@@ -3,27 +3,23 @@ from typing import Iterable
 from concurrent.futures import ThreadPoolExecutor
 
 from diffa.db.factory import DatabaseFactory
-from diffa.db.diffa import SQLAlchemyDiffaDatabase
-from diffa.db.data_models import CountCheck, DiffaCheckSchema
+from diffa.db.diffa import DiffaCheckDatabase, DiffaCheckRunDatabase
+from diffa.db.data_models import CountCheck, DiffaCheckSchema, DiffaCheckRunSchema
 from diffa.config import ConfigManager, DIFFA_BEGIN_DATE
 from diffa.utils import Logger
 
 logger = Logger(__name__)
 
 
-class DatabaseHandler:
-    """Handler for all database operations"""
+class SourceTargetHandler:
 
     def __init__(self, config_manager: ConfigManager):
-
-        self.config_manager = config_manager
         self.source_db = DatabaseFactory.create_database(
             config_manager.get_db_config("source")
         )
         self.target_db = DatabaseFactory.create_database(
             config_manager.get_db_config("target")
         )
-        self.diffa_db = SQLAlchemyDiffaDatabase(config_manager.get_db_config("diffa"))
 
     def get_counts(
         self, last_check_date: date, invalid_check_dates: Iterable[date]
@@ -44,6 +40,15 @@ class DatabaseHandler:
             future_target_count.result(),
         )
         return map(to_count_check, source_counts), map(to_count_check, target_counts)
+
+
+class DiffaCheckHandler:
+
+    def __init__(self, config_manager: ConfigManager):
+        self.config_manager = config_manager
+        self.diffa_db = DiffaCheckDatabase(
+            config_manager.get_db_config("diffa", table_key="checks")
+        )
 
     def get_last_check_date(self) -> date:
 
@@ -76,7 +81,9 @@ class DatabaseHandler:
             invalid_check["check_date"] for invalid_check in invalid_checks
         ]
         if len(invalid_check_dates) > 0:
-            logger.info(f"The number of invalid check dates is: {len(invalid_check_dates)}")
+            logger.info(
+                f"The number of invalid check dates is: {len(invalid_check_dates)}"
+            )
             return invalid_check_dates
         else:
             logger.info("No invalid check dates found")
@@ -86,3 +93,45 @@ class DatabaseHandler:
         """Upsert all the merged count checks to the diffa database"""
 
         self.diffa_db.upsert_diffa_checks(merged_count_check_schemas)
+
+
+class DiffaCheckRunHandler:
+
+    def __init__(self, config_manager: ConfigManager):
+        self.config_manager = config_manager
+        self.diffa_check_run_db = DiffaCheckRunDatabase(
+            config_manager.get_db_config("diffa", table_key="check_runs")
+        )
+
+    def checking_running_check_runs(self) -> list[str]:
+        """Check if there are any running check runs. Return all run_ids of RUNNING check runs."""
+
+        running_check_run_ids = []
+
+        checking_runs = self.diffa_check_run_db.get_running_check_runs(
+            source_database=self.config_manager.get_database("source"),
+            source_schema=self.config_manager.get_schema("source"),
+            source_table=self.config_manager.get_table("source"),
+            target_database=self.config_manager.get_database("target"),
+            target_schema=self.config_manager.get_schema("target"),
+            target_table=self.config_manager.get_table("target"),
+        )
+        for running_check_run in checking_runs:
+            running_check_run_ids.append(str(running_check_run.run_id))
+
+        return running_check_run_ids
+
+    def create_new_check_run(self, diffa_check_run_schema: DiffaCheckRunSchema):
+        """Create a new check run"""
+
+        self.diffa_check_run_db.create_diffa_check_run_record(diffa_check_run_schema)
+
+    def update_check_run_as_status(
+        self, diffa_check_run_schema: DiffaCheckRunSchema, status: str
+    ):
+        """Mark a check run as completed"""
+
+        diffa_check_run_schema.status = status
+        self.diffa_check_run_db.update_diffa_check_run_record_with_status(
+            diffa_check_run_schema.run_id, status
+        )

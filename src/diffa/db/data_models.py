@@ -2,6 +2,7 @@ from datetime import date, datetime
 from typing import Optional
 from dataclasses import dataclass, field
 import hashlib
+import uuid
 
 from sqlalchemy import (
     Column,
@@ -13,6 +14,7 @@ from sqlalchemy import (
     DateTime,
 )
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.dialects.postgresql import UUID
 from pydantic import BaseModel, model_validator
 
 from diffa.config import ConfigManager
@@ -26,16 +28,16 @@ config = ConfigManager()
 class DiffaCheck(Base):
     """SQLAlchemy Model for Diffa state management"""
 
-    __tablename__ = config.get_table("diffa")
+    __tablename__ = config.get_table("diffa", "checks")
     metadata = MetaData(schema=config.get_schema("diffa"))
     id = Column(String, primary_key=True)
-    source_database = Column(String, primary_key=True)
-    source_schema = Column(String, primary_key=True)
-    source_table = Column(String, primary_key=True)
-    target_database = Column(String, primary_key=True)
-    target_schema = Column(String, primary_key=True)
-    target_table = Column(String, primary_key=True)
-    check_date = Column(Date, primary_key=True)
+    source_database = Column(String)
+    source_schema = Column(String)
+    source_table = Column(String)
+    target_database = Column(String)
+    target_schema = Column(String)
+    target_table = Column(String)
+    check_date = Column(Date)
     source_count = Column(Integer)
     target_count = Column(Integer)
     is_valid = Column(Boolean)
@@ -94,6 +96,55 @@ class DiffaCheckSchema(BaseModel):
             )
         return self
 
+class DiffaCheckRun(Base):
+    """SQLAlchemy Model for Diffa state management"""
+
+    __tablename__ = config.get_table("diffa", "check_runs")
+    metadata = MetaData(schema=config.get_schema("diffa"))
+    run_id = Column(UUID, primary_key=True)
+    source_database = Column(String)
+    source_schema = Column(String)
+    source_table = Column(String)
+    target_database = Column(String)
+    target_schema = Column(String)
+    target_table = Column(String)
+    status = Column(String)
+    updated_at = Column(DateTime, default=datetime.utcnow)
+
+class DiffaCheckRunSchema(BaseModel):
+    """Pydantic Model (validation) for Diffa state management"""
+
+    run_id: uuid.UUID =  None
+    source_database: str
+    source_schema: str
+    source_table: str
+    target_database: str
+    target_schema: str
+    target_table: str
+    status: str
+
+    @classmethod
+    def create_id(cls):
+        """Create a unique ID for a single diffa check run"""
+        return uuid.uuid4()
+
+    class Config:
+        from_attributes = (
+            True  # Enable ORM mode to allow loading from SQLAlchemy models
+        )
+        validate_assignment = True
+    
+    @model_validator(mode="after")
+    def set_id_if_missing(self):
+        if self.run_id is None:
+            self.run_id = self.create_id()
+        return self
+
+    @model_validator(mode="after")
+    def validate_status(self):
+        if self.status not in ["RUNNING", "COMPLETED", "FAILED"]:
+            raise ValueError(f"Invalid status: {self.status}")
+        return self
 
 @dataclass
 class CountCheck:
