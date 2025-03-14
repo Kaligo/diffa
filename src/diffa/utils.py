@@ -1,5 +1,5 @@
 import logging
-
+from typing import Iterable
 
 class Logger:
     def __init__(self, name: str):
@@ -22,3 +22,23 @@ class Logger:
 
     def warning(self, message: str, *args, **kwargs):
         self.logger.warning(message, *args, **kwargs)
+
+class DiffaException(Exception):
+    """Base class for all Diffa exceptions."""
+
+class InvalidDiffException(DiffaException):
+    """Raised when an invalid diff is detected between source and target."""
+
+class RunningCheckRunsException(DiffaException):
+    """Raised when there are other running check runs."""
+
+    def __init__(self, run_ids: Iterable[str], message: str = None):
+        self.run_ids = run_ids
+        self.message = f"{message} Run IDs: {', '.join(self.run_ids)}"
+        super().__init__(self.message)
+
+    
+    def get_running_run_ids(self):
+        """Return the IDs of the running records"""
+
+        return self.run_ids
