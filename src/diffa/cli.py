@@ -6,8 +6,10 @@ import click
 from alembic import command
 from alembic.config import Config
 
-from diffa.services import DiffaService
+from diffa.managers.check_manager import CheckManager
+from diffa.managers.run_manager import RunManager
 from diffa.config import ConfigManager, CONFIG_FILE, ExitCode
+from diffa.utils import RunningCheckRunsException, InvalidDiffException
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
@@ -19,6 +21,21 @@ def cli():
 
 
 @cli.command()
+@click.option(
+    "--source-db-info",
+    type=str,
+    help="Source database info."
+)
+@click.option(
+    "--target-db-info",
+    type=str,
+    help="Target database info."
+)
+@click.option(
+    "--diffa-db-info",
+    type=str,
+    help="Diffa database info."
+)
 @click.option(
     "--source-database",
     type=str,
@@ -55,6 +72,9 @@ def cli():
 )
 def data_diff(
     *,
+    source_db_info: str = None,
+    target_db_info: str = None,
+    diffa_db_info: str = None,
     source_database: str = None,
     source_schema: str = "public",
     source_table: str,
@@ -62,19 +82,34 @@ def data_diff(
     target_schema: str = "public",
     target_table: str,
 ):
-    ConfigManager().configure(
+    config_manager = ConfigManager()
+    config_manager.configure(
         source_database=source_database,
         source_schema=source_schema,
         source_table=source_table,
         target_database=target_database,
         target_schema=target_schema,
         target_table=target_table,
+        source_db_info=source_db_info,
+        target_db_info=target_db_info,
+        diffa_db_info=diffa_db_info
     )
-    if DiffaService().compare_tables():
+    run_manager = RunManager(config_manager=config_manager)
+    check_manager = CheckManager(config_manager=config_manager)
+    try:
+        run_manager.start_run()
+        check_manager.data_diff()
+
+        click.echo("There is no invalid diff between source and target.")
+        run_manager.complete_run()
+    except RunningCheckRunsException:
+        raise
+    except InvalidDiffException:
         click.echo("There is an invalid diff between source and target.")
         sys.exit(ExitCode.INVALID_DIFF.value)
-    else:
-        click.echo("There is no invalid diff between source and target.")
+    except Exception:
+        run_manager.fail_run()
+        raise
 
 
 @cli.command()
