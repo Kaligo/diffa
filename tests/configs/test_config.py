@@ -3,6 +3,7 @@ import json
 from unittest.mock import patch, mock_open
 
 import pytest
+from common import TEST_POSTGRESQL_CONN_STRING
 
 from diffa.config import (
     ConfigManager,
@@ -12,7 +13,7 @@ from diffa.config import (
     DIFFA_DB_TABLE,
     DIFFA_CHECK_RUNS_TABLE,
 )
-from common import TEST_POSTGRESQL_CONN_STRING
+
 
 @pytest.mark.parametrize(
     "db_info, database, schema, table, expected_parsed_config",
@@ -187,3 +188,44 @@ def test_config_manager_load_config(mock_open_file, mock_mkdirs, mock_path_exist
     assert config_manager.get_db_info("source") == TEST_POSTGRESQL_CONN_STRING
     assert config_manager.get_db_info("target") == TEST_POSTGRESQL_CONN_STRING
     assert config_manager.get_db_info("diffa") == TEST_POSTGRESQL_CONN_STRING
+
+
+@patch.dict(os.environ, {"DIFFA__TARGET_URI": "test_target_uri"})
+@patch("os.path.exists", return_value=True)
+@patch("os.makedirs")
+@patch(
+    "builtins.open",
+    new_callable=mock_open,
+    read_data=json.dumps(
+        {
+            "source_uri": "test_source_uri",
+            "target_uri": None,
+            "diffa_uri": TEST_POSTGRESQL_CONN_STRING,
+        }
+    ),
+)
+def test_config_manager_configure(mock_open_file, mock_mkdirs, mock_path_exists):
+    # When initializing this as ConfigManager(), the params explicitly passed are not in the scope of the patch. Causing the issue.
+    config_manager = ConfigManager(
+        source_config=SourceTargetConfig(),
+        target_config=SourceTargetConfig(),
+        diffa_config=DiffaDBConfig(),
+    )
+
+    config_manager.configure(
+        source_db_info=TEST_POSTGRESQL_CONN_STRING,
+        source_schema="test_schema",
+        source_table="test_table",
+        target_db_info=TEST_POSTGRESQL_CONN_STRING,
+        target_schema="test_schema",
+        target_table="test_table",
+    )
+    assert config_manager.get_config("source") == SourceTargetConfig(
+        db_info=TEST_POSTGRESQL_CONN_STRING, schema="test_schema", table="test_table"
+    )
+    assert config_manager.get_config("target") == SourceTargetConfig(
+        db_info=TEST_POSTGRESQL_CONN_STRING, schema="test_schema", table="test_table"
+    )
+    assert config_manager.get_config("diffa") == DiffaDBConfig(
+        db_info=TEST_POSTGRESQL_CONN_STRING,
+    )

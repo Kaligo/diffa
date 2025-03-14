@@ -29,6 +29,14 @@ class BaseConfig(ABC):
         self.database = database
         self.parsed_db_info = None
 
+    def __eq__(self, __value: object) -> bool:
+        if not isinstance(__value, self.__class__):
+            return NotImplemented
+        return self.__dict__ == __value.__dict__
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.__dict__})"
+
     def update(self, **kwargs):
         for key, value in kwargs.items():
             if hasattr(self, key) and value is not None:
@@ -204,6 +212,9 @@ class ConfigManager:
             db_info=self.config["diffa"].db_info
             or os.getenv("DIFFA__DIFFA_DB_URI", uri_config.get("diffa_uri")),
         )
+
+    def get_config(self, db_key: str):
+        return self.config[db_key]
 
     def get_db_config(self, db_key: str, *args, **kwargs):
         return self.config[db_key].get_db_config(*args, **kwargs)
