@@ -210,9 +210,7 @@ def test_config_manager_configure(mock_open_file, mock_mkdirs, mock_path_exists)
         source_config=SourceTargetConfig(),
         target_config=SourceTargetConfig(),
         diffa_config=DiffaDBConfig(),
-    )
-
-    config_manager.configure(
+    ).configure(
         source_db_info=TEST_POSTGRESQL_CONN_STRING,
         source_schema="test_schema",
         source_table="test_table",

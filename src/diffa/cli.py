@@ -21,21 +21,9 @@ def cli():
 
 
 @cli.command()
-@click.option(
-    "--source-db-info",
-    type=str,
-    help="Source database info."
-)
-@click.option(
-    "--target-db-info",
-    type=str,
-    help="Target database info."
-)
-@click.option(
-    "--diffa-db-info",
-    type=str,
-    help="Diffa database info."
-)
+@click.option("--source-db-info", type=str, help="Source database info.")
+@click.option("--target-db-info", type=str, help="Target database info.")
+@click.option("--diffa-db-info", type=str, help="Diffa database info.")
 @click.option(
     "--source-database",
     type=str,
@@ -82,8 +70,7 @@ def data_diff(
     target_schema: str = "public",
     target_table: str,
 ):
-    config_manager = ConfigManager()
-    config_manager.configure(
+    config_manager = ConfigManager().configure(
         source_database=source_database,
         source_schema=source_schema,
         source_table=source_table,
@@ -92,7 +79,7 @@ def data_diff(
         target_table=target_table,
         source_db_info=source_db_info,
         target_db_info=target_db_info,
-        diffa_db_info=diffa_db_info
+        diffa_db_info=diffa_db_info,
     )
     run_manager = RunManager(config_manager=config_manager)
     check_manager = CheckManager(config_manager=config_manager)

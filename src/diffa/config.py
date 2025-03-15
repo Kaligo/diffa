@@ -192,6 +192,7 @@ class ConfigManager:
         self.config["diffa"].update(
             db_info=diffa_db_info,
         )
+        return self
 
     def __load_config(self):
         uri_config = {}
