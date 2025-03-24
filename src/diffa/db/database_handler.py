@@ -15,10 +15,10 @@ class SourceTargetHandler:
 
     def __init__(self, config_manager: ConfigManager):
         self.source_db = DatabaseFactory.create_database(
-            config_manager.get_db_config("source")
+            config_manager.source.get_db_config()
         )
         self.target_db = DatabaseFactory.create_database(
-            config_manager.get_db_config("target")
+            config_manager.target.get_db_config()
         )
 
     def get_counts(
@@ -47,18 +47,18 @@ class DiffaCheckHandler:
     def __init__(self, config_manager: ConfigManager):
         self.config_manager = config_manager
         self.diffa_db = DiffaCheckDatabase(
-            config_manager.get_db_config("diffa", table_key="checks")
+            config_manager.diffa_check.get_db_config()
         )
 
     def get_last_check_date(self) -> date:
 
         latest_check = self.diffa_db.get_latest_check(
-            source_database=self.config_manager.get_database("source"),
-            source_schema=self.config_manager.get_schema("source"),
-            source_table=self.config_manager.get_table("source"),
-            target_database=self.config_manager.get_database("target"),
-            target_schema=self.config_manager.get_schema("target"),
-            target_table=self.config_manager.get_table("target"),
+            source_database=self.config_manager.source.get_db_name(),
+            source_schema=self.config_manager.source.get_db_schema(),
+            source_table=self.config_manager.source.get_db_table(),
+            target_database=self.config_manager.target.get_db_name(),
+            target_schema=self.config_manager.target.get_db_schema(),
+            target_table=self.config_manager.target.get_db_table(),
         )
 
         check_date = latest_check["check_date"] if latest_check else DIFFA_BEGIN_DATE
@@ -69,12 +69,12 @@ class DiffaCheckHandler:
     def get_invalid_check_dates(self) -> Iterable[date]:
 
         invalid_checks = self.diffa_db.get_invalid_checks(
-            source_database=self.config_manager.get_database("source"),
-            source_schema=self.config_manager.get_schema("source"),
-            source_table=self.config_manager.get_table("source"),
-            target_database=self.config_manager.get_database("target"),
-            target_schema=self.config_manager.get_schema("target"),
-            target_table=self.config_manager.get_table("target"),
+            source_database=self.config_manager.source.get_db_name(),
+            source_schema=self.config_manager.source.get_db_schema(),
+            source_table=self.config_manager.source.get_db_table(),
+            target_database=self.config_manager.target.get_db_name(),
+            target_schema=self.config_manager.target.get_db_schema(),
+            target_table=self.config_manager.target.get_db_table(),
         )
 
         invalid_check_dates = [
@@ -100,7 +100,7 @@ class DiffaCheckRunHandler:
     def __init__(self, config_manager: ConfigManager):
         self.config_manager = config_manager
         self.diffa_check_run_db = DiffaCheckRunDatabase(
-            config_manager.get_db_config("diffa", table_key="check_runs")
+            config_manager.diffa_check_run.get_db_config()
         )
 
     def checking_running_check_runs(self) -> list[str]:
@@ -109,12 +109,12 @@ class DiffaCheckRunHandler:
         running_check_run_ids = []
 
         checking_runs = self.diffa_check_run_db.get_running_check_runs(
-            source_database=self.config_manager.get_database("source"),
-            source_schema=self.config_manager.get_schema("source"),
-            source_table=self.config_manager.get_table("source"),
-            target_database=self.config_manager.get_database("target"),
-            target_schema=self.config_manager.get_schema("target"),
-            target_table=self.config_manager.get_table("target"),
+            source_database=self.config_manager.source.get_db_name(),
+            source_schema=self.config_manager.source.get_db_schema(),
+            source_table=self.config_manager.source.get_db_table(),
+            target_database=self.config_manager.target.get_db_name(),
+            target_schema=self.config_manager.target.get_db_schema(),
+            target_table=self.config_manager.target.get_db_table(),
         )
         for running_check_run in checking_runs:
             running_check_run_ids.append(str(running_check_run.run_id))

@@ -14,7 +14,7 @@ class CheckManager:
         self.cm = config_manager
         self.source_target_handler = SourceTargetHandler(self.cm)
         self.diffa_check_handler = DiffaCheckHandler(self.cm)
-    
+
     def data_diff(self):
         """This will interupt the process when there are invalid diff found."""
 
@@ -26,8 +26,8 @@ class CheckManager:
 
         logger.info(
             f"""Starting diffa comparison for:
-                - Source: {self.cm.get_database('source')}.{self.cm.get_schema('source')}.{self.cm.get_table('source')}
-                - Target: {self.cm.get_database('target')}.{self.cm.get_schema('target')}.{self.cm.get_table('target')}
+                - Source: {self.cm.source.get_db_name()}.{self.cm.source.get_db_schema()}.{self.cm.source.get_db_table()}
+                - Target: {self.cm.target.get_db_name()}.{self.cm.target.get_db_schema()}.{self.cm.target.get_db_table()}
             """
         )
 
@@ -47,12 +47,12 @@ class CheckManager:
         self.diffa_check_handler.save_diffa_checks(
             map(
                 lambda merged_count_check: merged_count_check.to_diffa_check_schema(
-                    source_database=self.cm.get_database("source"),
-                    source_schema=self.cm.get_schema("source"),
-                    source_table=self.cm.get_table("source"),
-                    target_database=self.cm.get_database("target"),
-                    target_schema=self.cm.get_schema("target"),
-                    target_table=self.cm.get_table("target"),
+                    source_database=self.cm.source.get_db_name(),
+                    source_schema=self.cm.source.get_db_schema(),
+                    source_table=self.cm.source.get_db_table(),
+                    target_database=self.cm.target.get_db_name(),
+                    target_schema=self.cm.target.get_db_schema(),
+                    target_table=self.cm.target.get_db_table(),
                 ),
                 merged_count_checks,
             )

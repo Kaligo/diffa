@@ -21,9 +21,9 @@ def cli():
 
 
 @cli.command()
-@click.option("--source-db-info", type=str, help="Source database info.")
-@click.option("--target-db-info", type=str, help="Target database info.")
-@click.option("--diffa-db-info", type=str, help="Diffa database info.")
+@click.option("--source-db-url", type=str, help="Source database info.")
+@click.option("--target-db-url", type=str, help="Target database info.")
+@click.option("--diffa-db-url", type=str, help="Diffa database info.")
 @click.option(
     "--source-database",
     type=str,
@@ -60,9 +60,9 @@ def cli():
 )
 def data_diff(
     *,
-    source_db_info: str = None,
-    target_db_info: str = None,
-    diffa_db_info: str = None,
+    source_db_url: str = None,
+    target_db_url: str = None,
+    diffa_db_url: str = None,
     source_database: str = None,
     source_schema: str = "public",
     source_table: str,
@@ -77,9 +77,9 @@ def data_diff(
         target_database=target_database,
         target_schema=target_schema,
         target_table=target_table,
-        source_db_info=source_db_info,
-        target_db_info=target_db_info,
-        diffa_db_info=diffa_db_info,
+        source_db_url=source_db_url,
+        target_db_url=target_db_url,
+        diffa_db_url=diffa_db_url,
     )
     run_manager = RunManager(config_manager=config_manager)
     check_manager = CheckManager(config_manager=config_manager)
@@ -106,15 +106,15 @@ def configure():
 
     config["source_uri"] = click.prompt(
         "Enter the source db connection string",
-        default=config_manager.get_db_info("source"),
+        default=config_manager.source.get_db_url(),
     )
     config["target_uri"] = click.prompt(
         "Enter the target db connection string",
-        default=config_manager.get_db_info("target"),
+        default=config_manager.target.get_db_url(),
     )
     config["diffa_uri"] = click.prompt(
         "Enter the diffa db connection string",
-        default=config_manager.get_db_info("diffa"),
+        default=config_manager.diffa_check.get_db_url(),
     )
 
     with open(CONFIG_FILE, "w", encoding="utf-8") as f:

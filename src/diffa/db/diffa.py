@@ -15,12 +15,10 @@ from diffa.db.data_models import (
     DiffaCheckRunSchema,
     DiffaCheckRun,
 )
-from diffa.config import ConfigManager
 from diffa.utils import Logger
 
 logger = Logger(__name__)
 Base = declarative_base()
-config = ConfigManager()
 
 
 class DiffaDatabase(Database):

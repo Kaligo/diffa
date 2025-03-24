@@ -15,12 +15,12 @@ class RunManager:
         self.cm = config_manager
         self.check_run_handler = DiffaCheckRunHandler(self.cm)
         self.current_run = DiffaCheckRunSchema(
-            source_database=self.cm.get_database("source"),
-            source_schema=self.cm.get_schema("source"),
-            source_table=self.cm.get_table("source"),
-            target_database=self.cm.get_database("target"),
-            target_schema=self.cm.get_schema("target"),
-            target_table=self.cm.get_table("target"),
+            source_database=self.cm.source.get_db_name(),
+            source_schema=self.cm.source.get_db_schema(),
+            source_table=self.cm.source.get_db_table(),
+            target_database=self.cm.target.get_db_name(),
+            target_schema=self.cm.target.get_db_schema(),
+            target_table=self.cm.target.get_db_table(),
             status="RUNNING",
         )
 
@@ -28,8 +28,10 @@ class RunManager:
 
         running_runs = self.check_run_handler.checking_running_check_runs()
         if len(running_runs) > 0:
-            raise RunningCheckRunsException(running_runs, "There are other RUNNING checks")
-        
+            raise RunningCheckRunsException(
+                running_runs, "There are other RUNNING checks"
+            )
+
         self.check_run_handler.create_new_check_run(self.current_run)
         logger.info(f"Created new check run with id: {self.current_run.run_id}")
 

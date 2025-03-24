@@ -41,7 +41,7 @@ def run_migrations_offline() -> None:
     script output.
 
     """
-    url = diffa_config.get_db_config("diffa")["db_url"]
+    url = diffa_config.diffa_check.get_db_url()
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -60,8 +60,8 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
-    connectable = create_engine(diffa_config.get_db_config("diffa")["db_url"])
-    version_schema = diffa_config.get_db_config("diffa")["schema"]
+    connectable = create_engine(diffa_config.diffa_check.get_db_url())
+    version_schema = diffa_config.diffa_check.get_db_schema()
 
     with connectable.connect() as connection:
         context.configure(

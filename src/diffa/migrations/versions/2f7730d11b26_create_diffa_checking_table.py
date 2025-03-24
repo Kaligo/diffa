@@ -1,7 +1,7 @@
 """create diffa checking table
 
 Revision ID: 2f7730d11b26
-Revises: 
+Revises:
 Create Date: 2025-02-10 00:46:22.212652
 
 """
@@ -23,9 +23,11 @@ config_manager = ConfigManager()
 
 
 def upgrade() -> None:
-    op.execute(f"CREATE SCHEMA IF NOT EXISTS {config_manager.get_schema('diffa')}")
+    op.execute(
+        f"CREATE SCHEMA IF NOT EXISTS {config_manager.diffa_check.get_db_schema()}"
+    )
     op.create_table(
-        f"{config_manager.get_table('diffa', 'checks')}",
+        f"{config_manager.diffa_check.get_db_table()}",
         sa.Column("id", sa.String, primary_key=True),
         sa.Column("source_database", sa.String, nullable=False),
         sa.Column("source_schema", sa.String, nullable=False),
@@ -38,14 +40,18 @@ def upgrade() -> None:
         sa.Column("target_count", sa.Integer, nullable=False),
         sa.Column("is_valid", sa.Boolean, nullable=False),
         sa.Column("diff_count", sa.Integer, nullable=False),
-        sa.Column("created_at", sa.DateTime, server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime, server_default=sa.func.now(), nullable=False),
-        schema=config_manager.get_schema("diffa"),
+        sa.Column(
+            "created_at", sa.DateTime, server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime, server_default=sa.func.now(), nullable=False
+        ),
+        schema=config_manager.diffa_check.get_db_schema(),
     )
 
 
 def downgrade() -> None:
     op.drop_table(
-        f"{config_manager.get_table('diffa', 'checks')}",
-        schema=config_manager.get_schema("diffa"),
+        f"{config_manager.diffa_check.get_db_table()}",
+        schema=config_manager.diffa_check.get_db_schema(),
     )

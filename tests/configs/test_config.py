@@ -7,8 +7,7 @@ from common import TEST_POSTGRESQL_CONN_STRING
 
 from diffa.config import (
     ConfigManager,
-    SourceTargetConfig,
-    DiffaDBConfig,
+    DBConfig,
     DIFFA_DB_SCHEMA,
     DIFFA_DB_TABLE,
     DIFFA_CHECK_RUNS_TABLE,
@@ -16,9 +15,9 @@ from diffa.config import (
 
 
 @pytest.mark.parametrize(
-    "db_info, database, schema, table, expected_parsed_config",
+    "db_url, db_name, db_schema, db_table, expected_parsed_config",
     [
-        # Case 1: Complete db_info and all parameters provided
+        # Case 1: Complete db_url and all parameters provided
         (
             "postgresql://user:password@localhost:5432/mydb",
             "mydb2",
@@ -36,7 +35,7 @@ from diffa.config import (
                 "db_url": "postgresql://user:password@localhost:5432/mydb2",
             },
         ),
-        # Case 2: Partial db_info (missing database), with complete parameters
+        # Case 2: Partial db_url (missing database), with complete parameters
         (
             "postgresql://user:password@localhost:5432",
             "mydb2",
@@ -54,7 +53,7 @@ from diffa.config import (
                 "db_url": "postgresql://user:password@localhost:5432/mydb2",
             },
         ),
-        # Case 3: Complete db_info, but missing database parameter (fallback to db_info value)
+        # Case 3: Complete db_url, but missing database parameter (fallback to db_url value)
         (
             "postgresql://user:password@localhost:5432/mydb",
             None,
@@ -74,93 +73,14 @@ from diffa.config import (
         ),
     ],
 )
-def test_source_target_config_parse_db_info(
-    db_info, database, schema, table, expected_parsed_config
+def test_db_config_parse_db_info(
+    db_url, db_name, db_schema, db_table, expected_parsed_config
 ):
 
-    config = SourceTargetConfig(
-        db_info=db_info, database=database, schema=schema, table=table
+    config = DBConfig(
+        db_url=db_url, db_name=db_name, db_schema=db_schema, db_table=db_table
     )
-    parsed_db_config = config.parse_db_info()
-
-    assert parsed_db_config == expected_parsed_config
-
-
-@pytest.mark.parametrize(
-    "db_info, database, table_key, expected_parsed_config",
-    [
-        # Case 1: Complete db_info, table_key for checks, and all parameters provided
-        (
-            "postgresql://user:password@localhost:5432/mydb",
-            "mydb2",
-            "checks",
-            {
-                "host": "localhost",
-                "scheme": "postgresql",
-                "port": 5432,
-                "database": "mydb2",
-                "user": "user",
-                "password": "password",
-                "schema": DIFFA_DB_SCHEMA,
-                "tables": {
-                    "checks": DIFFA_DB_TABLE,
-                    "check_runs": DIFFA_CHECK_RUNS_TABLE,
-                },
-                "table": DIFFA_DB_TABLE,
-                "db_url": "postgresql://user:password@localhost:5432/mydb2",
-            },
-        ),
-        # Case 2: Partial db_info (missing database), table_key for check_runs, with complete parameters
-        (
-            "postgresql://user:password@localhost:5432",
-            "mydb2",
-            "check_runs",
-            {
-                "host": "localhost",
-                "scheme": "postgresql",
-                "port": 5432,
-                "database": "mydb2",
-                "user": "user",
-                "password": "password",
-                "schema": DIFFA_DB_SCHEMA,
-                "tables": {
-                    "checks": DIFFA_DB_TABLE,
-                    "check_runs": DIFFA_CHECK_RUNS_TABLE,
-                },
-                "table": DIFFA_CHECK_RUNS_TABLE,
-                "db_url": "postgresql://user:password@localhost:5432/mydb2",
-            },
-        ),
-        # Case 3: Complete db_info, and table_key is None, but missing database parameter (fallback to db_info value)
-        (
-            "postgresql://user:password@localhost:5432/mydb",
-            None,
-            None,
-            {
-                "host": "localhost",
-                "scheme": "postgresql",
-                "port": 5432,
-                "database": "mydb",
-                "user": "user",
-                "password": "password",
-                "schema": DIFFA_DB_SCHEMA,
-                "tables": {
-                    "checks": DIFFA_DB_TABLE,
-                    "check_runs": DIFFA_CHECK_RUNS_TABLE,
-                },
-                "table": None,
-                "db_url": "postgresql://user:password@localhost:5432/mydb",
-            },
-        ),
-    ],
-)
-def test_diffa_config_parse_db_info(
-    db_info, database, table_key, expected_parsed_config
-):
-
-    config = DiffaDBConfig(db_info=db_info, database=database)
-    parsed_db_config = config.parse_db_info()
-    parsed_db_config = config.get_db_config(table_key=table_key)
+    parsed_db_config = config._parse_db_info()
 
     assert parsed_db_config == expected_parsed_config
 
@@ -181,13 +101,15 @@ def test_diffa_config_parse_db_info(
 )
 def test_config_manager_load_config(mock_open_file, mock_mkdirs, mock_path_exists):
     config_manager = ConfigManager(
-        source_config=SourceTargetConfig(),
-        target_config=SourceTargetConfig(),
-        diffa_config=DiffaDBConfig(db_info=TEST_POSTGRESQL_CONN_STRING),
+        source_config=DBConfig(),
+        target_config=DBConfig(),
+        diffa_check_config=DBConfig(db_url=TEST_POSTGRESQL_CONN_STRING),
+        diffa_check_run_config=DBConfig(db_url=TEST_POSTGRESQL_CONN_STRING),
     )
-    assert config_manager.get_db_info("source") == TEST_POSTGRESQL_CONN_STRING
-    assert config_manager.get_db_info("target") == TEST_POSTGRESQL_CONN_STRING
-    assert config_manager.get_db_info("diffa") == TEST_POSTGRESQL_CONN_STRING
+    assert config_manager.source.get_db_url() == TEST_POSTGRESQL_CONN_STRING
+    assert config_manager.target.get_db_url() == TEST_POSTGRESQL_CONN_STRING
+    assert config_manager.diffa_check.get_db_url() == TEST_POSTGRESQL_CONN_STRING
+    assert config_manager.diffa_check_run.get_db_url() == TEST_POSTGRESQL_CONN_STRING
 
 
 @patch.dict(os.environ, {"DIFFA__TARGET_URI": "test_target_uri"})
@@ -207,23 +129,35 @@ def test_config_manager_load_config(mock_open_file, mock_mkdirs, mock_path_exist
 def test_config_manager_configure(mock_open_file, mock_mkdirs, mock_path_exists):
     # When initializing this as ConfigManager(), the params explicitly passed are not in the scope of the patch. Causing the issue.
     config_manager = ConfigManager(
-        source_config=SourceTargetConfig(),
-        target_config=SourceTargetConfig(),
-        diffa_config=DiffaDBConfig(),
+        source_config=DBConfig(),
+        target_config=DBConfig(),
+        diffa_check_config=DBConfig(),
+        diffa_check_run_config=DBConfig(),
     ).configure(
-        source_db_info=TEST_POSTGRESQL_CONN_STRING,
+        source_db_url=TEST_POSTGRESQL_CONN_STRING,
         source_schema="test_schema",
         source_table="test_table",
-        target_db_info=TEST_POSTGRESQL_CONN_STRING,
+        target_db_url=TEST_POSTGRESQL_CONN_STRING,
         target_schema="test_schema",
         target_table="test_table",
     )
-    assert config_manager.get_config("source") == SourceTargetConfig(
-        db_info=TEST_POSTGRESQL_CONN_STRING, schema="test_schema", table="test_table"
+    assert config_manager.source == DBConfig(
+        db_url=TEST_POSTGRESQL_CONN_STRING,
+        db_schema="test_schema",
+        db_table="test_table",
     )
-    assert config_manager.get_config("target") == SourceTargetConfig(
-        db_info=TEST_POSTGRESQL_CONN_STRING, schema="test_schema", table="test_table"
+    assert config_manager.target == DBConfig(
+        db_url=TEST_POSTGRESQL_CONN_STRING,
+        db_schema="test_schema",
+        db_table="test_table",
     )
-    assert config_manager.get_config("diffa") == DiffaDBConfig(
-        db_info=TEST_POSTGRESQL_CONN_STRING,
+    assert config_manager.diffa_check == DBConfig(
+        db_url=TEST_POSTGRESQL_CONN_STRING,
+        db_schema=DIFFA_DB_SCHEMA,
+        db_table=DIFFA_DB_TABLE,
+    )
+    assert config_manager.diffa_check_run == DBConfig(
+        db_url=TEST_POSTGRESQL_CONN_STRING,
+        db_schema=DIFFA_DB_SCHEMA,
+        db_table=DIFFA_CHECK_RUNS_TABLE,
     )

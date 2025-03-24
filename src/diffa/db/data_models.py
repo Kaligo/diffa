@@ -28,8 +28,8 @@ config = ConfigManager()
 class DiffaCheck(Base):
     """SQLAlchemy Model for Diffa state management"""
 
-    __tablename__ = config.get_table("diffa", "checks")
-    metadata = MetaData(schema=config.get_schema("diffa"))
+    __tablename__ = config.diffa_check.get_db_table()
+    metadata = MetaData(schema=config.diffa_check.get_db_schema())
     id = Column(String, primary_key=True)
     source_database = Column(String)
     source_schema = Column(String)
@@ -99,8 +99,8 @@ class DiffaCheckSchema(BaseModel):
 class DiffaCheckRun(Base):
     """SQLAlchemy Model for Diffa state management"""
 
-    __tablename__ = config.get_table("diffa", "check_runs")
-    metadata = MetaData(schema=config.get_schema("diffa"))
+    __tablename__ = config.diffa_check_run.get_db_table()
+    metadata = MetaData(schema=config.diffa_check_run.get_db_schema())
     run_id = Column(UUID, primary_key=True)
     source_database = Column(String)
     source_schema = Column(String)

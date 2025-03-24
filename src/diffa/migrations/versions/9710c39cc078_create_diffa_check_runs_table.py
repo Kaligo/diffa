@@ -25,7 +25,7 @@ config_manager = ConfigManager()
 
 def upgrade() -> None:
     op.create_table(
-        f"{config_manager.get_table('diffa', 'check_runs')}",
+        f"{config_manager.diffa_check_run.get_db_table()}",
         sa.Column("run_id", sa.UUID, primary_key=True),
         sa.Column("source_database", sa.String, nullable=False),
         sa.Column("source_schema", sa.String, nullable=False),
@@ -40,11 +40,11 @@ def upgrade() -> None:
         sa.Column(
             "updated_at", sa.DateTime, server_default=sa.func.now(), nullable=False
         ),
-        schema=config_manager.get_schema("diffa"),
+        schema=config_manager.diffa_check_run.get_db_schema(),
     )
     op.create_index(
         "idx_unique_running_check_runs",
-        table_name=f"{config_manager.get_table('diffa', 'check_runs')}",
+        table_name=f"{config_manager.diffa_check_run.get_db_table()}",
         columns=[
             "source_database",
             "source_schema",
@@ -54,7 +54,7 @@ def upgrade() -> None:
             "target_table",
         ],
         unique=True,
-        schema=config_manager.get_schema("diffa"),
+        schema=config_manager.diffa_check_run.get_db_schema(),
         postgresql_where=sa.text("status = 'RUNNING'"),
     )
 
@@ -67,6 +67,6 @@ def downgrade() -> None:
         if_exists=True,
     )
     op.drop_table(
-        f"{config_manager.get_table('diffa', 'check_runs')}",
-        schema=config_manager.get_schema("diffa"),
+        f"{config_manager.diffa_check_run.get_db_table()}",
+        schema=config_manager.diffa_check_run.get_db_schema(),
     )
