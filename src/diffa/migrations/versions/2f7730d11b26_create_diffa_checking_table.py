@@ -28,7 +28,7 @@ def upgrade() -> None:
     )
     op.create_table(
         f"{config_manager.diffa_check.get_db_table()}",
-        sa.Column("id", sa.String, primary_key=True),
+        sa.Column("id", sa.UUID, primary_key=True),
         sa.Column("source_database", sa.String, nullable=False),
         sa.Column("source_schema", sa.String, nullable=False),
         sa.Column("source_table", sa.String, nullable=False),

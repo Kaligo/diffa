@@ -62,8 +62,8 @@ def upgrade() -> None:
 def downgrade() -> None:
     op.drop_index(
         "idx_unique_running_check_runs",
-        table_name=f"{config_manager.get_table('diffa', 'check_runs')}",
-        schema=config_manager.get_schema("diffa"),
+        table_name=f"{config_manager.diffa_check_run.get_db_table()}",
+        schema=config_manager.diffa_check_run.get_db_schema(),
         if_exists=True,
     )
     op.drop_table(

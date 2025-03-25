@@ -13,7 +13,7 @@ from diffa.db.data_models import (
     DiffaCheckRunSchema,
     DiffaCheckRun,
 )
-from diffa.utils import Logger, RunningCheckRunsException
+from diffa.utils import Logger
 
 logger = Logger(__name__)
 Base = declarative_base()

@@ -1,7 +1,6 @@
 from datetime import date, datetime
 from typing import Optional
 from dataclasses import dataclass, field
-import hashlib
 import uuid
 
 from sqlalchemy import (
@@ -30,7 +29,7 @@ class DiffaCheck(Base):
 
     __tablename__ = config.diffa_check.get_db_table()
     metadata = MetaData(schema=config.diffa_check.get_db_schema())
-    id = Column(String, primary_key=True)
+    id = Column(UUID, primary_key=True)
     source_database = Column(String)
     source_schema = Column(String)
     source_table = Column(String)
@@ -48,7 +47,7 @@ class DiffaCheck(Base):
 class DiffaCheckSchema(BaseModel):
     """Pydantic Model (validation) for Diffa state management"""
 
-    id: str = None
+    id: uuid.UUID = None
     source_database: str
     source_schema: str
     source_table: str
@@ -74,7 +73,7 @@ class DiffaCheckSchema(BaseModel):
     ):
         """Create a unique ID for the diffa check"""
         hash_input = f"{source_database}{source_schema}{source_table}{target_database}{target_schema}{target_table}{check_date}"
-        return hashlib.sha256(hash_input.encode()).hexdigest()
+        return uuid.uuid5(uuid.NAMESPACE_DNS, hash_input)
 
     class Config:
         from_attributes = (
@@ -96,6 +95,7 @@ class DiffaCheckSchema(BaseModel):
             )
         return self
 
+
 class DiffaCheckRun(Base):
     """SQLAlchemy Model for Diffa state management"""
 
@@ -111,10 +111,11 @@ class DiffaCheckRun(Base):
     status = Column(String)
     updated_at = Column(DateTime, default=datetime.utcnow)
 
+
 class DiffaCheckRunSchema(BaseModel):
     """Pydantic Model (validation) for Diffa state management"""
 
-    run_id: uuid.UUID =  None
+    run_id: uuid.UUID = None
     source_database: str
     source_schema: str
     source_table: str
@@ -133,7 +134,7 @@ class DiffaCheckRunSchema(BaseModel):
             True  # Enable ORM mode to allow loading from SQLAlchemy models
         )
         validate_assignment = True
-    
+
     @model_validator(mode="after")
     def set_id_if_missing(self):
         if self.run_id is None:
@@ -145,6 +146,7 @@ class DiffaCheckRunSchema(BaseModel):
         if self.status not in ["RUNNING", "COMPLETED", "FAILED"]:
             raise ValueError(f"Invalid status: {self.status}")
         return self
+
 
 @dataclass
 class CountCheck:
@@ -165,15 +167,15 @@ class MergedCountCheck:
 
     def __post_init__(self):
         self.is_valid = True if self.source_count <= self.target_count else False
-    
+
     def __eq__(self, other):
         if not isinstance(other, MergedCountCheck):
             return NotImplemented
         return (
-            self.source_count == other.source_count and
-            self.target_count == other.target_count and
-            self.check_date == other.check_date and
-            self.is_valid == other.is_valid
+            self.source_count == other.source_count
+            and self.target_count == other.target_count
+            and self.check_date == other.check_date
+            and self.is_valid == other.is_valid
         )
 
     @classmethod
