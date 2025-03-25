@@ -1,7 +1,8 @@
 from typing import Iterable
 
 from diffa.db.data_models import CountCheck, MergedCountCheck
-from diffa.db.database_handler import SourceTargetHandler, DiffaCheckHandler
+from diffa.db.diffa_check import DiffaCheckService
+from diffa.db.source_target import SourceTargetService
 from diffa.config import ConfigManager
 from diffa.utils import Logger, InvalidDiffException
 
@@ -12,8 +13,8 @@ class CheckManager:
 
     def __init__(self, config_manager: ConfigManager):
         self.cm = config_manager
-        self.source_target_handler = SourceTargetHandler(self.cm)
-        self.diffa_check_handler = DiffaCheckHandler(self.cm)
+        self.source_target_service = SourceTargetService(self.cm)
+        self.diffa_check_service = DiffaCheckService(self.cm)
 
     def data_diff(self):
         """This will interupt the process when there are invalid diff found."""
@@ -32,19 +33,19 @@ class CheckManager:
         )
 
         # Step 1: Get the last check date (for backfill mechanism)
-        last_check_date = self.diffa_check_handler.get_last_check_date()
+        last_check_date = self.diffa_check_service.get_last_check_date()
 
         # Step 2: Get the invalid check dates (for re-check mechanism)
-        invalid_check_dates = self.diffa_check_handler.get_invalid_check_dates()
+        invalid_check_dates = self.diffa_check_service.get_invalid_check_dates()
 
         # Step 3: Compare and merge the counts from the source and target databases
-        source_counts, target_counts = self.source_target_handler.get_counts(
+        source_counts, target_counts = self.source_target_service.get_counts(
             last_check_date, invalid_check_dates
         )
         merged_count_checks = self._merge_count_checks(source_counts, target_counts)
 
         # Step 4: Save the merged count checks to the diffa database
-        self.diffa_check_handler.save_diffa_checks(
+        self.diffa_check_service.save_diffa_checks(
             map(
                 lambda merged_count_check: merged_count_check.to_diffa_check_schema(
                     source_database=self.cm.source.get_db_name(),

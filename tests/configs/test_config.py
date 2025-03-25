@@ -7,7 +7,8 @@ from common import TEST_POSTGRESQL_CONN_STRING
 
 from diffa.config import (
     ConfigManager,
-    DBConfig,
+    SourceConfig,
+    DiffaConfig,
     DIFFA_DB_SCHEMA,
     DIFFA_DB_TABLE,
     DIFFA_CHECK_RUNS_TABLE,
@@ -77,7 +78,14 @@ def test_db_config_parse_db_info(
     db_url, db_name, db_schema, db_table, expected_parsed_config
 ):
 
-    config = DBConfig(
+    config = SourceConfig(
+        db_url=db_url, db_name=db_name, db_schema=db_schema, db_table=db_table
+    )
+    parsed_db_config = config._parse_db_info()
+
+    assert parsed_db_config == expected_parsed_config
+
+    config = DiffaConfig(
         db_url=db_url, db_name=db_name, db_schema=db_schema, db_table=db_table
     )
     parsed_db_config = config._parse_db_info()
@@ -101,10 +109,10 @@ def test_db_config_parse_db_info(
 )
 def test_config_manager_load_config(mock_open_file, mock_mkdirs, mock_path_exists):
     config_manager = ConfigManager(
-        source_config=DBConfig(),
-        target_config=DBConfig(),
-        diffa_check_config=DBConfig(db_url=TEST_POSTGRESQL_CONN_STRING),
-        diffa_check_run_config=DBConfig(db_url=TEST_POSTGRESQL_CONN_STRING),
+        source_config=SourceConfig(),
+        target_config=SourceConfig(),
+        diffa_check_config=DiffaConfig(db_url=TEST_POSTGRESQL_CONN_STRING),
+        diffa_check_run_config=DiffaConfig(db_url=TEST_POSTGRESQL_CONN_STRING),
     )
     assert config_manager.source.get_db_url() == TEST_POSTGRESQL_CONN_STRING
     assert config_manager.target.get_db_url() == TEST_POSTGRESQL_CONN_STRING
@@ -129,10 +137,10 @@ def test_config_manager_load_config(mock_open_file, mock_mkdirs, mock_path_exist
 def test_config_manager_configure(mock_open_file, mock_mkdirs, mock_path_exists):
     # When initializing this as ConfigManager(), the params explicitly passed are not in the scope of the patch. Causing the issue.
     config_manager = ConfigManager(
-        source_config=DBConfig(),
-        target_config=DBConfig(),
-        diffa_check_config=DBConfig(),
-        diffa_check_run_config=DBConfig(),
+        source_config=SourceConfig(),
+        target_config=SourceConfig(),
+        diffa_check_config=DiffaConfig(),
+        diffa_check_run_config=DiffaConfig(),
     ).configure(
         source_db_url=TEST_POSTGRESQL_CONN_STRING,
         source_schema="test_schema",
@@ -141,22 +149,22 @@ def test_config_manager_configure(mock_open_file, mock_mkdirs, mock_path_exists)
         target_schema="test_schema",
         target_table="test_table",
     )
-    assert config_manager.source == DBConfig(
+    assert config_manager.source == SourceConfig(
         db_url=TEST_POSTGRESQL_CONN_STRING,
         db_schema="test_schema",
         db_table="test_table",
     )
-    assert config_manager.target == DBConfig(
+    assert config_manager.target == SourceConfig(
         db_url=TEST_POSTGRESQL_CONN_STRING,
         db_schema="test_schema",
         db_table="test_table",
     )
-    assert config_manager.diffa_check == DBConfig(
+    assert config_manager.diffa_check == DiffaConfig(
         db_url=TEST_POSTGRESQL_CONN_STRING,
         db_schema=DIFFA_DB_SCHEMA,
         db_table=DIFFA_DB_TABLE,
     )
-    assert config_manager.diffa_check_run == DBConfig(
+    assert config_manager.diffa_check_run == DiffaConfig(
         db_url=TEST_POSTGRESQL_CONN_STRING,
         db_schema=DIFFA_DB_SCHEMA,
         db_table=DIFFA_CHECK_RUNS_TABLE,

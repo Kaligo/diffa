@@ -90,6 +90,9 @@ class DBConfig:
     def get_db_schema(self):
         return self.get_db_config().get("schema")
 
+    def get_db_scheme(self):
+        return self.get_db_config().get("scheme")
+
     def get_db_url(self):
         return self.db_url
 
@@ -97,15 +100,23 @@ class DBConfig:
         return self.get_db_config().get("table")
 
 
+class SourceConfig(DBConfig):
+    """A class to handle the configs for the Source DBs"""
+
+
+class DiffaConfig(DBConfig):
+    """A class to handle the configs for the Diffa DB"""
+
+
 class ConfigManager:
     """Manage all the configuration needed for Diffa Operations"""
 
     def __init__(
         self,
-        source_config: DBConfig = DBConfig(),
-        target_config: DBConfig = DBConfig(),
-        diffa_check_config: DBConfig = DBConfig(),
-        diffa_check_run_config: DBConfig = DBConfig(),
+        source_config: SourceConfig = SourceConfig(),
+        target_config: SourceConfig = SourceConfig(),
+        diffa_check_config: DiffaConfig = DiffaConfig(),
+        diffa_check_run_config: DiffaConfig = DiffaConfig(),
     ):
         self.config = {
             "source": source_config,

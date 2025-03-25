@@ -1,5 +1,6 @@
 from diffa.config import (
-    DBConfig,
+    SourceConfig,
+    DiffaConfig,
     ConfigManager,
 )
 
@@ -29,13 +30,13 @@ DB_CONFIGS = {
 
 def get_source_target_test_configs(db_scheme: str = "postgresql"):
     return {
-        "source": DBConfig(**DB_CONFIGS.get(db_scheme, {}).get("source")),
-        "target": DBConfig(**DB_CONFIGS.get(db_scheme, {}).get("target")),
+        "source": SourceConfig(**DB_CONFIGS.get(db_scheme, {}).get("source")),
+        "target": SourceConfig(**DB_CONFIGS.get(db_scheme, {}).get("target")),
     }
 
 
 def get_diffa_test_config(db_scheme: str = "postgresql"):
-    return DBConfig(**DB_CONFIGS.get(db_scheme, {}).get("diffa"))
+    return DiffaConfig(**DB_CONFIGS.get(db_scheme, {}).get("diffa"))
 
 
 def get_test_config_manager(db_scheme: str = "postgresql"):
