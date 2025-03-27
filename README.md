@@ -29,13 +29,18 @@ On the meltano side, we can install the diffa just like any other plugin.
 ## Configuration
 
 Users can configure database connection strings in two ways:
+1. **Params in the diffa command** (first priority)
+  - `diffa data-diff` command has the following params for users to input directly:
+    - `--source-db-uri`: Connection string for the source database.
+    - `--target-db-uri`: Connection string for the target database.
+    - `--diffa-db-uri`: Connection string for the Diffa database.
 
-1. **Environment Variables** (higher priority)
+2. **Environment Variables** (second priority)
    - `DIFFA__SOURCE_URI`: Connection string for the source database.
    - `DIFFA__TARGET_URI`: Connection string for the target database.
    - `DIFFA__DIFFA_DB_URI`: Connection string for the Diffa database.
 
-2. **Configuration File** (if environment variables are not set)
+3. **Configuration File** (third priority)
    - Run the following command to configure Diffa interactively:
 
      ```sh
@@ -79,16 +84,16 @@ diffa data-diff \
     --target-database rc-us_dev \
     --target-schema loyalty_engine \
     --target-table users \
-    --lookback-window 1 \
-    --execution-date 2025-02-02
 ```
 
 #### Options
-- `--source-database`: Name of the source database (default: Infered from the connection string).
-- `--source-schema`: Schema of the source table (default: `public`).
+- `--source-db-uri`: **(Optional)** Connection string for the source database.
+- `--target-db-uri`: **(Optional)** Connection string for the target database.
+- `--diffa-db-uri`: **(Optional)** Connection string for the Diffa database.
+- `--source-database`: Name of the source database **(Default: Infered from the connection string)**.
+- `--source-schema`: Schema of the source table **(Default: `public`)**.
 - `--source-table`: **(Required)** Name of the source table.
-- `--target-database`: Name of the target database (default: Infered from the connection string).
-- `--target-schema`: Schema of the target table (default: `public`).
+- `--target-database`: Name of the target database **(Default: Infered from the connection string)**.
+- `--target-schema`: Schema of the target table **(Default: `public`)**.
 - `--target-table`: **(Required)** Name of the target table.
-- `--lookback-window`: **(Required)** Lookback window in days.
-- `--execution-date`: **(Required)** Execution date in `YYYY-MM-DD` format.
+
