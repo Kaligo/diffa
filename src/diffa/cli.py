@@ -8,7 +8,7 @@ from alembic.config import Config
 
 from diffa.managers.check_manager import CheckManager
 from diffa.managers.run_manager import RunManager
-from diffa.config import ConfigManager, CONFIG_FILE, ExitCode
+from diffa.config import ConfigManager, ExitCode
 from diffa.utils import RunningCheckRunsException, InvalidDiffException
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -21,9 +21,9 @@ def cli():
 
 
 @cli.command()
-@click.option("--source-db-url", type=str, help="Source database info.")
-@click.option("--target-db-url", type=str, help="Target database info.")
-@click.option("--diffa-db-url", type=str, help="Diffa database info.")
+@click.option("--source-db-uri", type=str, help="Source database info.")
+@click.option("--target-db-uri", type=str, help="Target database info.")
+@click.option("--diffa-db-uri", type=str, help="Diffa database info.")
 @click.option(
     "--source-database",
     type=str,
@@ -60,9 +60,9 @@ def cli():
 )
 def data_diff(
     *,
-    source_db_url: str = None,
-    target_db_url: str = None,
-    diffa_db_url: str = None,
+    source_db_uri: str = None,
+    target_db_uri: str = None,
+    diffa_db_uri: str = None,
     source_database: str = None,
     source_schema: str = "public",
     source_table: str,
@@ -77,23 +77,20 @@ def data_diff(
         target_database=target_database,
         target_schema=target_schema,
         target_table=target_table,
-        source_db_url=source_db_url,
-        target_db_url=target_db_url,
-        diffa_db_url=diffa_db_url,
+        source_db_uri=source_db_uri,
+        target_db_uri=target_db_uri,
+        diffa_db_uri=diffa_db_uri,
     )
     run_manager = RunManager(config_manager=config_manager)
     check_manager = CheckManager(config_manager=config_manager)
     try:
         run_manager.start_run()
         check_manager.data_diff()
-
-        click.echo("There is no invalid diff between source and target.")
         run_manager.complete_run()
     except RunningCheckRunsException:
         raise
     except InvalidDiffException:
         run_manager.complete_run()
-        click.echo("There is an invalid diff between source and target.")
         sys.exit(ExitCode.INVALID_DIFF.value)
     except Exception:
         run_manager.fail_run()
@@ -103,25 +100,23 @@ def data_diff(
 @cli.command()
 def configure():
     config_manager = ConfigManager()
-    config = {}
 
-    config["source_uri"] = click.prompt(
+    source_uri = click.prompt(
         "Enter the source db connection string",
-        default=config_manager.source.get_db_url(),
+        default=config_manager.source.get_db_uri(),
     )
-    config["target_uri"] = click.prompt(
+    target_uri = click.prompt(
         "Enter the target db connection string",
-        default=config_manager.target.get_db_url(),
+        default=config_manager.target.get_db_uri(),
     )
-    config["diffa_uri"] = click.prompt(
+    diffa_uri = click.prompt(
         "Enter the diffa db connection string",
-        default=config_manager.diffa_check.get_db_url(),
+        default=config_manager.diffa_check.get_db_uri(),
     )
 
-    with open(CONFIG_FILE, "w", encoding="utf-8") as f:
-        json.dump(config, f, indent=4)
-
-    click.echo("Configuration saved to successfully.")
+    config_manager.save_config(
+        source_uri=source_uri, target_uri=target_uri, diffa_uri=diffa_uri
+    )
 
 
 @cli.command()

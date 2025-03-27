@@ -9,19 +9,19 @@ TEST_POSTGRESQL_CONN_STRING = "postgresql://postgres:Password1@localhost:5432/po
 DB_CONFIGS = {
     "postgresql": {
         "source": {
-            "db_url": TEST_POSTGRESQL_CONN_STRING,
+            "db_uri": TEST_POSTGRESQL_CONN_STRING,
             "db_name": "postgres",
             "db_schema": "public_source",
             "db_table": "test",
         },
         "target": {
-            "db_url": TEST_POSTGRESQL_CONN_STRING,
+            "db_uri": TEST_POSTGRESQL_CONN_STRING,
             "db_name": "postgres",
             "db_schema": "public_target",
             "db_table": "test",
         },
         "diffa": {
-            "db_url": TEST_POSTGRESQL_CONN_STRING,
+            "db_uri": TEST_POSTGRESQL_CONN_STRING,
             "db_name": "postgres_diffa",
         },
     }

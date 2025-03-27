@@ -26,12 +26,12 @@ logger = Logger(__name__)
 class DBConfig:
     def __init__(
         self,
-        db_url: str = None,
+        db_uri: str = None,
         db_name: str = None,
         db_schema: str = None,
         db_table: str = None,
     ):
-        self.db_url = db_url
+        self.db_uri = db_uri
         self.db_name = db_name
         self.db_schema = db_schema
         self.db_table = db_table
@@ -52,7 +52,7 @@ class DBConfig:
 
     def _parse_db_info(self):
         try:
-            dns = dsnparse.parse(self.db_url)
+            dns = dsnparse.parse(self.db_uri)
             parsed_db_info = self._extract_db_details(dns)
             self._validate_parsed_db_info(parsed_db_info)
             return parsed_db_info
@@ -78,7 +78,7 @@ class DBConfig:
             "password": dns.password,
             "schema": self.db_schema,
             "table": self.db_table,
-            "db_url": f"{dns.scheme}://{dns.username}:{dns.password}@{dns.host}:{dns.port}/{db_database}",
+            "db_uri": f"{dns.scheme}://{dns.username}:{dns.password}@{dns.host}:{dns.port}/{db_database}",
         }
 
     def get_db_config(self):
@@ -93,8 +93,8 @@ class DBConfig:
     def get_db_scheme(self):
         return self.get_db_config().get("scheme")
 
-    def get_db_url(self):
-        return self.db_url
+    def get_db_uri(self):
+        return self.db_uri
 
     def get_db_table(self):
         return self.get_db_config().get("table")
@@ -133,33 +133,33 @@ class ConfigManager:
     def configure(
         self,
         *,
-        source_db_url: str = None,
+        source_db_uri: str = None,
         source_database: str = None,
         source_schema: str = "public",
         source_table: str,
-        target_db_url: str = None,
+        target_db_uri: str = None,
         target_database: str = None,
         target_schema: str = "public",
         target_table: str,
-        diffa_db_url: str = None,
+        diffa_db_uri: str = None,
     ):
         self.source.update(
-            db_url=source_db_url,
+            db_uri=source_db_uri,
             db_name=source_database,
             db_schema=source_schema,
             db_table=source_table,
         )
         self.target.update(
-            db_url=target_db_url,
+            db_uri=target_db_uri,
             db_name=target_database,
             db_schema=target_schema,
             db_table=target_table,
         )
         self.diffa_check.update(
-            db_url=diffa_db_url,
+            db_uri=diffa_db_uri,
         )
         self.diffa_check_run.update(
-            db_url=diffa_db_url,
+            db_uri=diffa_db_uri,
         )
         return self
 
@@ -171,24 +171,38 @@ class ConfigManager:
                 uri_config = json.load(f)
 
         self.source.update(
-            db_url=self.source.db_url
+            db_uri=self.source.db_uri
             or os.getenv("DIFFA__SOURCE_URI", uri_config.get("source_uri"))
         )
         self.target.update(
-            db_url=self.target.db_url
+            db_uri=self.target.db_uri
             or os.getenv("DIFFA__TARGET_URI", uri_config.get("target_uri"))
         )
         self.diffa_check.update(
-            db_url=self.diffa_check.db_url
+            db_uri=self.diffa_check.db_uri
             or os.getenv("DIFFA__DIFFA_DB_URI", uri_config.get("diffa_uri")),
         )
         self.diffa_check_run.update(
-            db_url=self.diffa_check_run.db_url
+            db_uri=self.diffa_check_run.db_uri
             or os.getenv("DIFFA__DIFFA_DB_URI", uri_config.get("diffa_uri")),
         )
 
+    def save_config(self, source_uri: str, target_uri: str, diffa_uri: str):
+        """Saving the Config into the FileSystem"""
+
+        config = {
+            "source_uri": source_uri,
+            "target_uri": target_uri,
+            "diffa_uri": diffa_uri,
+        }
+        with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+            json.dump(config, f, indent=4)
+
+        logger.info("Configuration saved to successfully.")
+
     def __getattr__(self, __name: str) -> DBConfig:
         """Dynamically access DBConfig attributes (e.g config_manager.source.database)"""
+
         if __name in self.config:
             return self.config[__name]
         raise ArithmeticError(f"'ConfigManager' has no config '{__name}'")

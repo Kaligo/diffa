@@ -56,7 +56,7 @@ class DiffaConnection(Connection):
 
     def __get_engine(self):
         return create_engine(
-            self.db_config["db_url"] + "?sslmode=prefer"
+            self.db_config["db_uri"] + "?sslmode=prefer"
         )  # Prefer SSL mode
 
     def connect(self):

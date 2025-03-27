@@ -20,7 +20,9 @@ class CheckManager:
         """This will interupt the process when there are invalid diff found."""
 
         if self.compare_tables():
+            logger.error("There is an invalid diff between source and target.")
             raise InvalidDiffException
+        logger.info("There is no invalid diff between source and target.")
 
     def compare_tables(self):
         """Data-diff comparison service. Will return True if there is any invalid diff."""
