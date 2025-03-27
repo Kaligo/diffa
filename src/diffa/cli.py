@@ -92,6 +92,7 @@ def data_diff(
     except RunningCheckRunsException:
         raise
     except InvalidDiffException:
+        run_manager.complete_run()
         click.echo("There is an invalid diff between source and target.")
         sys.exit(ExitCode.INVALID_DIFF.value)
     except Exception:

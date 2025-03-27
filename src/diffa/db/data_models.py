@@ -41,7 +41,7 @@ class DiffaCheck(Base):
     target_count = Column(Integer)
     is_valid = Column(Boolean)
     diff_count = Column(Integer)
-    updated_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime)
 
 
 class DiffaCheckSchema(BaseModel):
@@ -109,7 +109,7 @@ class DiffaCheckRun(Base):
     target_schema = Column(String)
     target_table = Column(String)
     status = Column(String)
-    updated_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime)
 
 
 class DiffaCheckRunSchema(BaseModel):
