@@ -49,6 +49,14 @@ def upgrade() -> None:
         schema=config_manager.diffa_check.get_db_schema(),
     )
 
+    # Grant usage and select permissions to all users
+    op.execute(
+        f"GRANT USAGE ON SCHEMA {config_manager.diffa_check.get_db_schema()} TO PUBLIC"
+    )
+    op.execute(
+        f"GRANT SELECT ON ALL TABLES IN SCHEMA {config_manager.diffa_check.get_db_schema()} TO PUBLIC"
+    )
+
 
 def downgrade() -> None:
     op.drop_table(

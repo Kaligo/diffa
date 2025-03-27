@@ -58,6 +58,11 @@ def upgrade() -> None:
         postgresql_where=sa.text("status = 'RUNNING'"),
     )
 
+    # Grant usage and select permissions to all users
+    op.execute(
+        f"GRANT SELECT ON ALL TABLES IN SCHEMA {config_manager.diffa_check_run.get_db_schema()} TO PUBLIC"
+    )
+
 
 def downgrade() -> None:
     op.drop_index(
