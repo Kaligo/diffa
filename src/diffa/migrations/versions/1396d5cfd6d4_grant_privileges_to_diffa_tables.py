@@ -24,6 +24,9 @@ diffa_schema = config_manager.diffa_check.get_db_schema()
 
 
 def upgrade() -> None:
+    """
+    Grants all privileges on all tables in the specified schema to PUBLIC.
+    """
     op.execute(f"GRANT USAGE ON SCHEMA {diffa_schema} TO PUBLIC")
     op.execute(f"GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA {diffa_schema} TO PUBLIC")
     op.execute(
