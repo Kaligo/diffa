@@ -187,6 +187,7 @@ class ConfigManager:
             or os.getenv("DIFFA__DIFFA_DB_URI", uri_config.get("diffa_uri")),
         )
 
+    @classmethod
     def save_config(self, source_uri: str, target_uri: str, diffa_uri: str):
         """Saving the Config into the FileSystem"""
 

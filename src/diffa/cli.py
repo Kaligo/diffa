@@ -114,7 +114,7 @@ def configure():
         default=config_manager.diffa_check.get_db_uri(),
     )
 
-    config_manager.save_config(
+    ConfigManager.save_config(
         source_uri=source_uri, target_uri=target_uri, diffa_uri=diffa_uri
     )
 
