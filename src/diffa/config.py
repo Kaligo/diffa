@@ -2,7 +2,6 @@ import os
 import json
 from datetime import date
 from enum import Enum
-from typing import Any
 
 import dsnparse
 
