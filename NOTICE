@@ -1,0 +1,54 @@
+=========================================================================
+                                 NOTICE
+=========================================================================
+
+diffa
+Copyright 2025 Ascenda Loyalty Pte. Ltd.
+
+This product includes software developed by Ascenda Loyalty.
+This product is licensed under the Apache License, Version 2.0.
+A copy of the Apache License 2.0 can be found in the LICENSE file.
+
+-------------------------------------------------------------------------
+Third-Party Dependencies:
+-------------------------------------------------------------------------
+
+This product depends on third-party software packages distributed under
+their own licenses. While these licenses may not all require explicit
+mention in this NOTICE file, we acknowledge their use below for clarity.
+Compliance with the terms of these licenses (e.g., including their
+original copyright and license text upon redistribution) is required.
+
+Core dependencies include:
+
+* click (BSD 3-Clause License)
+    Copyright (c) 2014 Pallets Team <https://palletsprojects.com/>
+
+* pydantic (MIT License)
+    Copyright (c) 2017- Samuel Colvin <https://github.com/pydantic/pydantic>
+
+* flake8 (MIT License)
+    Copyright (c) 2011-2016 Ian Cordasco, Tarek Ziadé <https://flake8.pycqa.org/>
+
+* dsnparse (MIT License)
+    Copyright (c) 2018- Andrey Kislyuk <https://github.com/kislyuk/dsnparse>
+
+* psycopg2 (GNU Lesser General Public License v3 or later - LGPL-3.0-or-later)
+    Copyright (c) 2001-2015 Daniele Varrazzo and contributors <https://www.psycopg.org/>
+    *Note: Use requires compliance with LGPL terms regarding source availability and modifications.*
+
+* alembic (MIT License)
+    Copyright (c) 2009-2023 Michael Bayer <https://alembic.sqlalchemy.org/>
+
+* SQLAlchemy (MIT License)
+    Copyright (c) 2005-2024 Michael Bayer <https://www.sqlalchemy.org/>
+
+* pytest (MIT License)
+    Copyright (c) 2004-2023 Holger Krekel and others <https://pytest.org/>
+
+
+Please consult the respective package distributions or source repositories
+for the full license texts and detailed copyright information for all
+dependencies, including transitive dependencies.
+
+=========================================================================
