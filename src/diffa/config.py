@@ -51,6 +51,9 @@ class DBConfig:
 
     def _parse_db_info(self):
         try:
+            # Users can ref an env var in the DB_URI in the command
+            if self.db_uri.startswith("$"):
+                self.db_uri = os.getenv(self.db_uri[1:], "")
             dns = dsnparse.parse(self.db_uri)
             parsed_db_info = self._extract_db_details(dns)
             self._validate_parsed_db_info(parsed_db_info)

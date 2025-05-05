@@ -14,7 +14,7 @@ from diffa.config import (
     DIFFA_CHECK_RUNS_TABLE,
 )
 
-
+@patch.dict(os.environ, {"SOURCE_URI": "postgresql://user:password@localhost:5432/mydb"})
 @pytest.mark.parametrize(
     "db_uri, db_name, db_schema, db_table, expected_parsed_config",
     [
@@ -57,6 +57,24 @@ from diffa.config import (
         # Case 3: Complete db_uri, but missing database parameter (fallback to db_uri value)
         (
             "postgresql://user:password@localhost:5432/mydb",
+            None,
+            "myschema",
+            "users",
+            {
+                "host": "localhost",
+                "scheme": "postgresql",
+                "port": 5432,
+                "database": "mydb",
+                "user": "user",
+                "password": "password",
+                "schema": "myschema",
+                "table": "users",
+                "db_uri": "postgresql://user:password@localhost:5432/mydb",
+            },
+        ),
+        # Case 4: Complete db_uri but inputing using env var, missing database parametter
+        (
+            "$SOURCE_URI",
             None,
             "myschema",
             "users",
