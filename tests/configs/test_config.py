@@ -90,6 +90,24 @@ from diffa.config import (
                 "db_uri": "postgresql://user:password@localhost:5432/mydb",
             },
         ),
+        # Case 5: Complete db_uri but email-format username, missing database parametter
+        (
+            "postgresql://user@email.com:password@localhost:5432/mydb",
+            None,
+            "myschema",
+            "users",
+            {
+                "host": "localhost",
+                "scheme": "postgresql",
+                "port": 5432,
+                "database": "mydb",
+                "user": "user@email.com",
+                "password": "password",
+                "schema": "myschema",
+                "table": "users",
+                "db_uri": "postgresql://user@email.com:password@localhost:5432/mydb",
+            },
+        ),
     ],
 )
 def test_db_config_parse_db_info(

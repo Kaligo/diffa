@@ -2,8 +2,7 @@ import os
 import json
 from datetime import date
 from enum import Enum
-
-import dsnparse
+from urllib.parse import urlparse
 
 from diffa.utils import Logger
 
@@ -54,12 +53,12 @@ class DBConfig:
             # Users can ref an env var in the DB_URI in the command
             if self.db_uri.startswith("$"):
                 self.db_uri = os.getenv(self.db_uri[1:], "")
-            dns = dsnparse.parse(self.db_uri)
+            dns = urlparse(self.db_uri)
             parsed_db_info = self._extract_db_details(dns)
             self._validate_parsed_db_info(parsed_db_info)
             return parsed_db_info
-        except TypeError:
-            logger.error("Invalid db info", exc_info=True)
+        except Exception as e:
+            logger.error(f"Error parsing DB info: {e}")
             raise
 
     def _validate_parsed_db_info(self, parsed_db_info: dict):
@@ -70,9 +69,9 @@ class DBConfig:
                 )
 
     def _extract_db_details(self, dns):
-        db_database = self.db_name or dns.database
+        db_database = self.db_name or dns.path.lstrip("/")
         return {
-            "host": dns.host,
+            "host": dns.hostname,
             "scheme": dns.scheme,
             "port": dns.port,
             "database": db_database,
@@ -80,7 +79,7 @@ class DBConfig:
             "password": dns.password,
             "schema": self.db_schema,
             "table": self.db_table,
-            "db_uri": f"{dns.scheme}://{dns.username}:{dns.password}@{dns.host}:{dns.port}/{db_database}",
+            "db_uri": f"{dns.scheme}://{dns.username}:{dns.password}@{dns.hostname}:{dns.port}/{db_database}",
         }
 
     def get_db_config(self):
