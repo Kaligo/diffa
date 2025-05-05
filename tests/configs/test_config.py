@@ -72,7 +72,7 @@ from diffa.config import (
                 "db_uri": "postgresql://user:password@localhost:5432/mydb",
             },
         ),
-        # Case 4: Complete db_uri but inputing using env var, missing database parametter
+        # Case 4: Complete db_uri but inputting using env var, missing database parameter
         (
             "$SOURCE_URI",
             None,
@@ -90,7 +90,7 @@ from diffa.config import (
                 "db_uri": "postgresql://user:password@localhost:5432/mydb",
             },
         ),
-        # Case 5: Complete db_uri but email-format username, missing database parametter
+        # Case 5: Complete db_uri but email-format username, missing database parameter
         (
             "postgresql://user@email.com:password@localhost:5432/mydb",
             None,
