@@ -6,7 +6,7 @@ authors = ["Quoc Nguyen <quoc.nguyen@ascenda.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.12.8,<3.13"
+python = ">=3.12.8,<3.14"
 click = ">=8.1.8,<9.0"
 pydantic = ">=2.10.6,<3.0"
 flake8 = ">=7.1.1,<8.0"
