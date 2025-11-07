@@ -3,6 +3,7 @@ import json
 from datetime import date
 from enum import Enum
 from urllib.parse import urlparse
+from typing import List, Optional
 
 from diffa.utils import Logger
 
@@ -103,8 +104,12 @@ class DBConfig:
 
 class SourceConfig(DBConfig):
     """A class to handle the configs for the Source DBs"""
+    def __init__(self, *args, diff_dimension_cols: Optional[List[str]] = None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.diff_dimension_cols = diff_dimension_cols or []
 
-
+    def get_diff_dimension_cols(self):
+        return self.diff_dimension_cols
 class DiffaConfig(DBConfig):
     """A class to handle the configs for the Diffa DB"""
 
@@ -143,18 +148,21 @@ class ConfigManager:
         target_schema: str = "public",
         target_table: str,
         diffa_db_uri: str = None,
+        diff_dimension_cols: List[str] = None,
     ):
         self.source.update(
             db_uri=source_db_uri,
             db_name=source_database,
             db_schema=source_schema,
             db_table=source_table,
+            diff_dimension_cols=diff_dimension_cols,
         )
         self.target.update(
             db_uri=target_db_uri,
             db_name=target_database,
             db_schema=target_schema,
             db_table=target_table,
+            diff_dimension_cols=diff_dimension_cols,
         )
         self.diffa_check.update(
             db_uri=diffa_db_uri,
@@ -203,7 +211,7 @@ class ConfigManager:
         logger.info("Configuration saved to successfully.")
 
     def __getattr__(self, __name: str) -> DBConfig:
-        """Dynamically access DBConfig attributes (e.g config_manager.source.database)"""
+        """Dynamically access DBConfig attributes (e.g config_manager.source.get_db_name())"""
 
         if __name in self.config:
             return self.config[__name]

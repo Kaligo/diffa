@@ -1,6 +1,6 @@
 from datetime import date
-from typing import Optional
-from dataclasses import dataclass, field
+from typing import Optional, List, Tuple
+from dataclasses import dataclass, field, fields, make_dataclass, asdict
 import uuid
 
 from sqlalchemy import (
@@ -148,15 +148,46 @@ class DiffaCheckRunSchema(BaseModel):
         return self
 
 
-@dataclass
+@dataclass(frozen=True)
 class CountCheck:
     """A single count check in Source/Target Database"""
 
-    cnt: int
     check_date: date
+    cnt: int
+
+    @classmethod
+    def create_with_dimensions(cls, dimension_cols: Optional[List[str]] = None):
+        """Factory method to create a CountCheck class with dimension fields"""
+
+        return make_dataclass(
+            cls.__name__,
+            [(col, str) for col in sorted(dimension_cols)] if dimension_cols else [],
+            bases=(cls,),
+            frozen=True,
+        )
+
+    @classmethod
+    def get_base_fields(cls) -> List[Tuple[str, type]]:
+        return [("check_date", date), ("cnt", int)]
+
+    @classmethod
+    def get_dimension_fields(cls) -> List[Tuple[str, type]]:
+        base_fields = {name for name, _ in cls.get_base_fields()}
+
+        return [(f.name, f.type) for f in fields(cls) if f.name not in base_fields]
+
+    def get_dimension_values(self):
+        # check_date is still considered as a dimension field. In fact, it's a main dimension field.
+        return {
+            f[0]: getattr(self, f[0])
+            for f in self.get_dimension_fields() + [("check_date", date)]
+        }
+
+    def to_flatten_dimension_format(self) -> dict:
+        return {tuple(self.get_dimension_values().items()): self}
 
 
-@dataclass
+@dataclass(frozen=True)
 class MergedCountCheck:
     """A merged count check after checking count in Source/Target Databases"""
 
@@ -166,33 +197,40 @@ class MergedCountCheck:
     is_valid: bool = field(init=False)
 
     def __post_init__(self):
-        self.is_valid = True if self.source_count <= self.target_count else False
+        object.__setattr__(self, 'is_valid', True if self.source_count <= self.target_count else False)
 
     def __eq__(self, other):
         if not isinstance(other, MergedCountCheck):
             return NotImplemented
-        return (
-            self.source_count == other.source_count
-            and self.target_count == other.target_count
-            and self.check_date == other.check_date
-            and self.is_valid == other.is_valid
-        )
+        return asdict(self) == asdict(other)
+    
+    def __lt__(self, other):
+        if not isinstance(other, MergedCountCheck):
+            return NotImplemented
+        return asdict(self) < asdict(other)
+
+    def __str__(self):
+        field_strs = [f"{f.name}={getattr(self, f.name)}" for f in fields(self)]
+        return f"MergedCountCheck({', '.join(field_strs)})"
+
+    @classmethod
+    def create_with_dimensions(cls, dimension_fields: List[Tuple[str, type]]):
+        """Factory method to dynamically create a MergedCountCheck with a CountCheck schema"""
+
+        return make_dataclass(cls.__name__, dimension_fields, bases=(cls,), frozen=True, eq=False)
 
     @classmethod
     def from_counts(
         cls, source: Optional[CountCheck] = None, target: Optional[CountCheck] = None
     ):
-        if source and target:
-            if source.check_date != target.check_date:
-                raise ValueError("Source and target counts are not for the same date.")
-        elif not source and not target:
-            raise ValueError("Both source and target counts are missing.")
+        count_check = source if source else target
+        merged_count_check_values = count_check.get_dimension_values()
+        merged_count_check_values["source_count"] = source.cnt if source else 0
+        merged_count_check_values["target_count"] = target.cnt if target else 0
 
-        check_date = source.check_date if source else target.check_date
-        source_count = source.cnt if source else 0
-        target_count = target.cnt if target else 0
-
-        return cls(source_count, target_count, check_date)
+        return cls.create_with_dimensions(count_check.get_dimension_fields())(
+            **merged_count_check_values
+        )
 
     def to_diffa_check_schema(
         self,

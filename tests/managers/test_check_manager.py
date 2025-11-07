@@ -71,7 +71,34 @@ def check_manager():
                 )
             ],
         ),
-        # Case 4: Checking dates are in neither source nor target
+        # Case 4: Checking different dates in source and target
+        (
+            [
+                CountCheck(
+                    cnt=200,
+                    check_date=datetime.strptime("2024-01-01", "%Y-%m-%d").date(),
+                )
+            ],
+            [
+                CountCheck(
+                    cnt=200,
+                    check_date=datetime.strptime("2024-01-02", "%Y-%m-%d").date(),
+                )
+            ],
+            [
+                MergedCountCheck(
+                    source_count=200,
+                    target_count=0,
+                    check_date=datetime.strptime("2024-01-01", "%Y-%m-%d").date(),
+                ),
+                MergedCountCheck(
+                    source_count=0,
+                    target_count=200,
+                    check_date=datetime.strptime("2024-01-02", "%Y-%m-%d").date(),
+                ),
+            ],
+        ),
+        # Case 5: Checking dates are in neither source nor target
         ([], [], []),
     ],
 )
@@ -81,60 +108,133 @@ def test__merge_count_check(
     merged_counts = check_manager._merge_count_checks(source_counts, target_counts)
     assert expected_merged_counts == merged_counts
 
-
 @pytest.mark.parametrize(
-    "merged_count_checks, expected_result",
+    "source_counts, target_counts, expected_merged_counts",
     [
-        # Case 1: All merged count checks are valid
-        [
+        # Case 1: Checking dates are in both source and target
+        (
             [
-                MergedCountCheck(
-                    source_count=100,
-                    target_count=100,
+                CountCheck.create_with_dimensions(["status", "country"])(
+                    cnt=100,
                     check_date=datetime.strptime("2024-01-01", "%Y-%m-%d").date(),
-                ),
-                MergedCountCheck(
+                    status="True",
+                    country="US"
+                )
+            ],
+            [
+                CountCheck.create_with_dimensions(["status", "country"])(
+                    cnt=200,
+                    check_date=datetime.strptime("2024-01-01", "%Y-%m-%d").date(),
+                    status="True",
+                    country="US"
+                )
+            ],
+            [
+                MergedCountCheck.create_with_dimensions(["status", "country"])(
                     source_count=100,
-                    target_count=150,
+                    target_count=200,
+                    check_date=datetime.strptime("2024-01-01", "%Y-%m-%d").date(),
+                    status="True",
+                    country="US"
+                )
+            ],
+        ),
+        # Case 2: Checking dates are in source only
+        (
+            [
+                CountCheck.create_with_dimensions(
+                    ["status", "country"])(
+                    cnt=100,
+                    check_date=datetime.strptime("2024-01-01", "%Y-%m-%d").date(),
+                    status="True",
+                    country="US"
+                )
+            ],
+            [],
+            [
+                MergedCountCheck.create_with_dimensions(["status", "country"])(
+                    source_count=100,
+                    target_count=0,
+                    check_date=datetime.strptime("2024-01-01", "%Y-%m-%d").date(),
+                    status="True",
+                    country="US"
+                )
+            ],
+        ),
+        # Case 3: Checking dates are in target only
+        (
+            [],
+            [
+                CountCheck.create_with_dimensions(["status", "country"])(
+                    cnt=200,
+                    check_date=datetime.strptime("2024-01-01", "%Y-%m-%d").date(),
+                    status="True",
+                    country="US"
+                )
+            ],
+            [
+                MergedCountCheck.create_with_dimensions(["status", "country"])(
+                    source_count=0,
+                    target_count=200,
+                    check_date=datetime.strptime("2024-01-01", "%Y-%m-%d").date(),
+                    status="True",
+                    country="US"
+                )
+            ],
+        ),
+        # Case 4: Checking different dates in source and target
+        (
+            [
+                CountCheck.create_with_dimensions(["status", "country"])(
+                    cnt=200,
+                    check_date=datetime.strptime("2024-01-01", "%Y-%m-%d").date(),
+                    status="True",
+                    country="US"
+                ),
+                CountCheck.create_with_dimensions(["status", "country"])(
+                    cnt=200,
+                    check_date=datetime.strptime("2024-01-01", "%Y-%m-%d").date(),
+                    status="True",
+                    country="Singapore"
+                )
+            ],
+            [
+                CountCheck.create_with_dimensions(["status", "country"])(
+                    cnt=200,
                     check_date=datetime.strptime("2024-01-02", "%Y-%m-%d").date(),
-                ),
+                    status="False",
+                    country="US"
+                )
             ],
-            False,
-        ],
-        # Case 2: All merged count checks are invalid
-        [
             [
-                MergedCountCheck(
-                    source_count=150,
-                    target_count=100,
+                MergedCountCheck.create_with_dimensions(["status", "country"])(
+                    source_count=200,
+                    target_count=0,
                     check_date=datetime.strptime("2024-01-01", "%Y-%m-%d").date(),
+                    status="True",
+                    country="Singapore"
                 ),
-            ],
-            True,
-        ],
-        # Case 3: Mixed valid and invalid merged count checks
-        [
-            [
-                MergedCountCheck(
-                    source_count=100,
-                    target_count=100,
+                MergedCountCheck.create_with_dimensions(["status", "country"])(
+                    source_count=200,
+                    target_count=0,
                     check_date=datetime.strptime("2024-01-01", "%Y-%m-%d").date(),
+                    status="True",
+                    country="US"
                 ),
-                MergedCountCheck(
-                    source_count=150,
-                    target_count=100,
+                MergedCountCheck.create_with_dimensions(["status", "country"])(
+                    source_count=0,
+                    target_count=200,
                     check_date=datetime.strptime("2024-01-02", "%Y-%m-%d").date(),
-                ),
-                MergedCountCheck(
-                    source_count=100,
-                    target_count=150,
-                    check_date=datetime.strptime("2024-01-03", "%Y-%m-%d").date(),
+                    status="False",
+                    country="US"
                 ),
             ],
-            True,
-        ],
+        ),
+        # Case 5: Checking dates are in neither source nor target
+        ([], [], []),
+
     ],
 )
-def test__check_if_invalid_diff(check_manager, merged_count_checks, expected_result):
-    is_invalid_diff = check_manager._check_if_invalid_diff(merged_count_checks)
-    assert is_invalid_diff == expected_result
+def test__merge_count_check_with_dimensions(check_manager, source_counts, target_counts, expected_merged_counts):
+    merged_counts = check_manager._merge_count_checks(source_counts, target_counts)
+    assert expected_merged_counts == merged_counts

@@ -6,7 +6,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.dialects.postgresql import insert
 
 from diffa.db.connect import DiffaConnection
-from diffa.config import DBConfig, ConfigManager, DIFFA_BEGIN_DATE
+from diffa.config import DiffaConfig, ConfigManager, DIFFA_BEGIN_DATE
 from diffa.db.data_models import (
     DiffaCheckSchema,
     DiffaCheck,
@@ -20,7 +20,7 @@ Base = declarative_base()
 class DiffaCheckDatabase:
     """SQLAlchemy Database Adapter for Diffa state management"""
 
-    def __init__(self, db_config: DBConfig):
+    def __init__(self, db_config: DiffaConfig):
         self.db_config = db_config
         self.conn = DiffaConnection(self.db_config.get_db_config())
 
