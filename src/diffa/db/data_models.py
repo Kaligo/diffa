@@ -153,8 +153,8 @@ class DiffaCheckRunSchema(BaseModel):
 class CountCheck:
     """A single count check in Source/Target Database"""
 
-    check_date: date
     cnt: int
+    check_date: date
 
     @classmethod
     def create_with_dimensions(cls, dimension_cols: Optional[List[str]] = None):

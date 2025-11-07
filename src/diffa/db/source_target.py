@@ -52,10 +52,10 @@ class SourceTargetDatabase:
         )
         """
         group_by_diff_dimensions_clause = (
-            f"{','.join(diff_dimension_cols)}" if diff_dimension_cols else ""
+            f", {','.join(diff_dimension_cols)}" if diff_dimension_cols else ""
         )
         select_diff_dimensions_clause = (
-            f"{','.join([f'{col}::text' for col in diff_dimension_cols])}"
+            f", {','.join([f'{col}::text' for col in diff_dimension_cols])}"
             if diff_dimension_cols
             else ""
         )
@@ -63,13 +63,14 @@ class SourceTargetDatabase:
         return f"""
             SELECT 
                 created_at::DATE as check_date,
-                COUNT(*) AS cnt,
+                COUNT(*) AS cnt
                 {select_diff_dimensions_clause}
             FROM {self.db_config.get_db_schema()}.{self.db_config.get_db_table()}
             WHERE
                 {backfill_where_clause}
                 {catchup_where_clause}
-            GROUP BY created_at::DATE, {group_by_diff_dimensions_clause}
+            GROUP BY created_at::DATE 
+                {group_by_diff_dimensions_clause}
             ORDER BY created_at::DATE ASC
         """
 
