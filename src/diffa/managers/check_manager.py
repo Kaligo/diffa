@@ -22,7 +22,7 @@ class CheckManager:
     def data_diff(self):
         """This will interupt the process when there are invalid diff found."""
 
-        if self.compare_tables():
+        if not self.compare_tables():
             logger.error("❌ There is an invalid diff between source and target.")
             raise InvalidDiffException
         logger.info("✅ There is no invalid diff between source and target.")
@@ -99,7 +99,7 @@ class CheckManager:
             """
             for check_date, stats in stats_by_day.items()
         ]
-        stats_summary = "\n".join(summary_lines)
+        stats_summary = "\n".join(summary_lines) if summary_lines else "No stats available"
 
         logger.info(
             f"""

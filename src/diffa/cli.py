@@ -4,7 +4,6 @@ import os
 import click
 from alembic import command
 from alembic.config import Config
-from typing import List
 
 from diffa.managers.check_manager import CheckManager
 from diffa.managers.run_manager import RunManager
@@ -59,8 +58,8 @@ def cli():
     help="Target table name.",
 )
 @click.option(
-    "--diff-dimenstions",
-    nargs=-1,
+    "--diff-dimensions",
+    multiple=True,
     type=str,
     help="Diff dimension columns.",
 )
@@ -75,7 +74,7 @@ def data_diff(
     target_database: str = None,
     target_schema: str = "public",
     target_table: str,
-    diff_dimenstions: List[str] = None,
+    diff_dimensions: tuple = None,
 ):
     config_manager = ConfigManager().configure(
         source_database=source_database,
@@ -87,7 +86,7 @@ def data_diff(
         source_db_uri=source_db_uri,
         target_db_uri=target_db_uri,
         diffa_db_uri=diffa_db_uri,
-        diff_dimension_cols=diff_dimenstions,
+        diff_dimension_cols=list(diff_dimensions) if diff_dimensions else None,
     )
     run_manager = RunManager(config_manager=config_manager)
     check_manager = CheckManager(config_manager=config_manager)
