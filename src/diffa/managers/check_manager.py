@@ -69,7 +69,10 @@ class CheckManager:
         self._build_check_summary(merged_count_checks, merged_by_date)
 
         # Return True if there is any invalid diff
-        return any(not mcc.is_valid for mcc in merged_by_date.values())
+        return self._check_if_valid_diff(merged_by_date.values())
+
+    def _check_if_valid_diff(self, merged_by_date: list[MergedCountCheck]) -> bool:
+        return all(mcc.is_valid for mcc in merged_by_date)
 
     def _build_check_summary(
         self,

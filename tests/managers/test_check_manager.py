@@ -354,3 +354,49 @@ def test__merge_count_check_with_dimensions(check_manager, source_counts, target
 def test__merge_by_check_date(check_manager, merged_count_checks, expected_merged_by_date):
     merged_by_date = check_manager._merge_by_check_date(merged_count_checks)
     assert expected_merged_by_date == merged_by_date
+
+@pytest.mark.parametrize(
+    "merged_by_date, expected_is_valid_diff",
+    [
+        # Case 1: Happy case
+        (
+            [
+                MergedCountCheck(
+                    source_count=100,
+                    target_count=200,
+                    is_valid=True,
+                    check_date=datetime.strptime("2024-01-01", "%Y-%m-%d").date()
+                ),
+                MergedCountCheck(
+                    source_count=200,
+                    target_count=200,
+                    is_valid=True,
+                    check_date=datetime.strptime("2024-01-02", "%Y-%m-%d").date()
+                ),
+            ],
+            True
+        ),
+        # Case 2: Unhappy case
+        (
+            [
+                MergedCountCheck(
+                    source_count=100,
+                    target_count=200,
+                    is_valid=True,
+                    check_date=datetime.strptime("2024-01-01", "%Y-%m-%d").date()
+                ),
+                MergedCountCheck(
+                    source_count=200,
+                    target_count=200,
+                    is_valid=False,
+                    check_date=datetime.strptime("2024-01-02", "%Y-%m-%d").date()
+                ),
+            ],
+            False
+        )
+    ],
+
+)
+def test__check_if_valid_diff(check_manager, merged_by_date, expected_is_valid_diff):
+    is_valid_diff = check_manager._check_if_valid_diff(merged_by_date)
+    assert is_valid_diff == expected_is_valid_diff
