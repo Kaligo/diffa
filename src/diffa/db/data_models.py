@@ -1,6 +1,7 @@
 from datetime import date
-from typing import Optional, List, Tuple
-from dataclasses import dataclass, field, fields, make_dataclass, asdict
+from typing import Optional, List, Tuple, Any
+from dataclasses import dataclass, fields, make_dataclass
+from functools import reduce
 import uuid
 
 from sqlalchemy import (
@@ -187,37 +188,64 @@ class CountCheck:
         return {tuple(self.get_dimension_values().items()): self}
 
 
-@dataclass(frozen=True)
 class MergedCountCheck:
     """A merged count check after checking count in Source/Target Databases"""
 
-    source_count: int
-    target_count: int
-    check_date: date
-    is_valid: bool = field(init=False)
+    def __init__(
+        self,
+        source_count: int,
+        target_count: int,
+        check_date: date,
+        is_valid: Optional[bool] = None,
+        **kwargs: Any,
+    ):
+        self.source_count = source_count
+        self.target_count = target_count
+        self.check_date = check_date
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
-    def __post_init__(self):
-        object.__setattr__(self, 'is_valid', True if self.source_count <= self.target_count else False)
+        self.is_valid = (
+            is_valid if is_valid is not None else source_count <= target_count
+        )
 
     def __eq__(self, other):
         if not isinstance(other, MergedCountCheck):
             return NotImplemented
-        return asdict(self) == asdict(other)
-    
+        return self.__dict__ == other.__dict__
+
     def __lt__(self, other):
         if not isinstance(other, MergedCountCheck):
             return NotImplemented
-        return asdict(self) < asdict(other)
+        dynamic_fields = [
+            f
+            for f in self.__dict__.keys()
+            if f not in ["source_count", "target_count", "check_date", "is_valid"]
+        ]
+        precedence = (
+            ["check_date"]
+            + dynamic_fields
+            + ["source_count", "target_count", "is_valid"]
+        )
+
+        return tuple(getattr(self, f) for f in precedence) < tuple(
+            getattr(other, f) for f in precedence
+        )
 
     def __str__(self):
-        field_strs = [f"{f.name}={getattr(self, f.name)}" for f in fields(self)]
-        return f"MergedCountCheck({', '.join(field_strs)})"
+        return f"MergedCountCheck({", ".join(f"{k}={v!r}" for k, v in self.__dict__.items())})"
 
     @classmethod
     def create_with_dimensions(cls, dimension_fields: List[Tuple[str, type]]):
         """Factory method to dynamically create a MergedCountCheck with a CountCheck schema"""
 
-        return make_dataclass(cls.__name__, dimension_fields, bases=(cls,), frozen=True, eq=False)
+        return type(
+            cls.__name__,
+            (cls,),
+            reduce(
+                lambda x, y: x | y, map(lambda x: {x[0]: x[1]}, dimension_fields), {}
+            ),
+        )
 
     @classmethod
     def from_counts(
@@ -228,9 +256,7 @@ class MergedCountCheck:
         merged_count_check_values["source_count"] = source.cnt if source else 0
         merged_count_check_values["target_count"] = target.cnt if target else 0
 
-        return cls.create_with_dimensions(count_check.get_dimension_fields())(
-            **merged_count_check_values
-        )
+        return cls(**merged_count_check_values)
 
     def to_diffa_check_schema(
         self,
