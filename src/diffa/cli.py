@@ -66,7 +66,7 @@ def cli():
 @click.option(
     "--full-diff",
     is_flag=True,
-    help="Full diff mode. Not saving the diffa checks to the database.",
+    help="Full diff mode. Re-run the diff from the beginning.",
 )
 def data_diff(
     *,
