@@ -157,12 +157,6 @@ class DiffaCheckService:
     def save_diffa_checks(self, merged_count_check_schemas: Iterable[DiffaCheckSchema]):
         """Upsert all the merged count checks to the diffa database"""
 
-        if self.is_full_diff:
-            logger.info(
-                "Full diff mode is enabled. Not saving diffa checks to the database."
-            )
-            return
-
         diffa_checks = [
             diffa_check.model_dump() for diffa_check in merged_count_check_schemas
         ]
