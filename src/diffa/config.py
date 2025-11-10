@@ -118,6 +118,7 @@ class DiffaConfig(DBConfig):
 
     def is_full_diff(self):
         return self.full_diff
+
 class ConfigManager:
     """Manage all the configuration needed for Diffa Operations"""
 
