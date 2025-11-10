@@ -12,7 +12,7 @@ CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
 DIFFA_DB_SCHEMA = "diffa"
 DIFFA_DB_TABLE = "diffa_checks"
 DIFFA_CHECK_RUNS_TABLE = "diffa_check_runs"
-DIFFA_BEGIN_DATE = date(2024, 1, 1)
+DIFFA_BEGIN_DATE = date(2020, 6, 1) # Matching with Ascenda start date
 
 
 class ExitCode(Enum):
