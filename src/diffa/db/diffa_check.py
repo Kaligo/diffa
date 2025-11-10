@@ -103,6 +103,7 @@ class DiffaCheckService:
     def __init__(self, config_manager: ConfigManager):
         self.config_manager = config_manager
         self.diffa_db = DiffaCheckDatabase(self.config_manager.diffa_check)
+        self.is_full_diff = self.config_manager.diffa_check.is_full_diff()
 
     def get_last_check_date(self) -> date:
 
@@ -115,8 +116,16 @@ class DiffaCheckService:
             target_table=self.config_manager.target.get_db_table(),
         )
 
-        check_date = latest_check["check_date"] if latest_check else DIFFA_BEGIN_DATE
-        logger.info(f"Last check date: {check_date}")
+        if not self.is_full_diff:
+            check_date = (
+                latest_check["check_date"] if latest_check else DIFFA_BEGIN_DATE
+            )
+            logger.info(f"Last check date: {check_date}")
+        else:
+            check_date = DIFFA_BEGIN_DATE
+            logger.info(
+                f"Full diff mode is enabled. Checking from the beginning. Last check date: {check_date}"
+            )
 
         return check_date
 
@@ -134,7 +143,9 @@ class DiffaCheckService:
         invalid_check_dates = [
             invalid_check["check_date"] for invalid_check in invalid_checks
         ]
-        if len(invalid_check_dates) > 0:
+        if self.is_full_diff:
+            return None
+        elif len(invalid_check_dates) > 0:
             logger.info(
                 f"The number of invalid check dates is: {len(invalid_check_dates)}"
             )
@@ -145,6 +156,12 @@ class DiffaCheckService:
 
     def save_diffa_checks(self, merged_count_check_schemas: Iterable[DiffaCheckSchema]):
         """Upsert all the merged count checks to the diffa database"""
+
+        if self.is_full_diff:
+            logger.info(
+                "Full diff mode is enabled. Not saving diffa checks to the database."
+            )
+            return
 
         diffa_checks = [
             diffa_check.model_dump() for diffa_check in merged_count_check_schemas

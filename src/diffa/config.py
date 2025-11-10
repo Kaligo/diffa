@@ -112,8 +112,12 @@ class SourceConfig(DBConfig):
         return self.diff_dimension_cols
 class DiffaConfig(DBConfig):
     """A class to handle the configs for the Diffa DB"""
+    def __init__(self, *args, full_diff: bool = False, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.full_diff = full_diff
 
-
+    def is_full_diff(self):
+        return self.full_diff
 class ConfigManager:
     """Manage all the configuration needed for Diffa Operations"""
 
@@ -149,6 +153,7 @@ class ConfigManager:
         target_table: str,
         diffa_db_uri: str = None,
         diff_dimension_cols: List[str] = None,
+        full_diff: bool = False,
     ):
         self.source.update(
             db_uri=source_db_uri,
@@ -166,6 +171,7 @@ class ConfigManager:
         )
         self.diffa_check.update(
             db_uri=diffa_db_uri,
+            full_diff=full_diff,
         )
         self.diffa_check_run.update(
             db_uri=diffa_db_uri,
