@@ -86,7 +86,9 @@ class CheckManager:
                 ),
                 "summary_msg": self._get_check_messages([mcc])[0],
             }
-            for check_date, mcc in merged_by_date.items()
+            for check_date, mcc in filter(
+                lambda x: not x[1].is_valid, merged_by_date.items()
+            )
         }
 
         summary_lines = [
@@ -99,14 +101,18 @@ class CheckManager:
             """
             for check_date, stats in stats_by_day.items()
         ]
-        stats_summary = "\n".join(summary_lines) if summary_lines else "No stats available"
+        stats_summary = (
+            "\n".join(summary_lines)
+            if summary_lines
+            else "No failed days stats available"
+        )
 
         logger.info(
             f"""
                 Data-diff comparison result:
                 Summary:
-                - Total days checked: {len(stats_by_day)}
-                - Stats by day:
+                - Total days checked: {len(merged_by_date)}
+                - Stats by failed days:
                     {stats_summary}
             """
         )
