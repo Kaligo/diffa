@@ -157,16 +157,13 @@ class CheckManager:
          Output [(1,0), (2,2), (0,4), (5,5), (6,0), (0,7)]
         """
 
-        source_dict = reduce(
-            lambda x, y: x | y,
-            map(lambda x: x.to_flatten_dimension_format(), source_counts),
-            {},
-        )
-        target_dict = reduce(
-            lambda x, y: x | y,
-            map(lambda x: x.to_flatten_dimension_format(), target_counts),
-            {},
-        )
+        source_dict = {}
+        for count_check in source_counts:
+            source_dict.update(count_check.to_flatten_dimension_format())
+
+        target_dict = {}
+        for count_check in target_counts:
+            target_dict.update(count_check.to_flatten_dimension_format())
 
         all_dims = set(source_dict.keys()) | set(target_dict.keys())
 
