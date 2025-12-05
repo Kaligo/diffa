@@ -6,7 +6,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.dialects.postgresql import insert
 
 from diffa.db.connect import DiffaConnection
-from diffa.config import DBConfig, ConfigManager, DIFFA_BEGIN_DATE
+from diffa.config import DiffaConfig, ConfigManager, DIFFA_BEGIN_DATE
 from diffa.db.data_models import (
     DiffaCheckSchema,
     DiffaCheck,
@@ -20,7 +20,7 @@ Base = declarative_base()
 class DiffaCheckDatabase:
     """SQLAlchemy Database Adapter for Diffa state management"""
 
-    def __init__(self, db_config: DBConfig):
+    def __init__(self, db_config: DiffaConfig):
         self.db_config = db_config
         self.conn = DiffaConnection(self.db_config.get_db_config())
 
@@ -103,6 +103,7 @@ class DiffaCheckService:
     def __init__(self, config_manager: ConfigManager):
         self.config_manager = config_manager
         self.diffa_db = DiffaCheckDatabase(self.config_manager.diffa_check)
+        self.is_full_diff = self.config_manager.diffa_check.is_full_diff()
 
     def get_last_check_date(self) -> date:
 
@@ -115,8 +116,16 @@ class DiffaCheckService:
             target_table=self.config_manager.target.get_db_table(),
         )
 
-        check_date = latest_check["check_date"] if latest_check else DIFFA_BEGIN_DATE
-        logger.info(f"Last check date: {check_date}")
+        if not self.is_full_diff:
+            check_date = (
+                latest_check["check_date"] if latest_check else DIFFA_BEGIN_DATE
+            )
+            logger.info(f"Last check date: {check_date}")
+        else:
+            check_date = DIFFA_BEGIN_DATE
+            logger.info(
+                f"Full diff mode is enabled. Checking from the beginning. Last check date: {check_date}"
+            )
 
         return check_date
 
@@ -134,7 +143,9 @@ class DiffaCheckService:
         invalid_check_dates = [
             invalid_check["check_date"] for invalid_check in invalid_checks
         ]
-        if len(invalid_check_dates) > 0:
+        if self.is_full_diff:
+            return None
+        elif len(invalid_check_dates) > 0:
             logger.info(
                 f"The number of invalid check dates is: {len(invalid_check_dates)}"
             )

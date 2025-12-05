@@ -57,6 +57,17 @@ def cli():
     type=str,
     help="Target table name.",
 )
+@click.option(
+    "--diff-dimensions",
+    multiple=True,
+    type=str,
+    help="Diff dimension columns.",
+)
+@click.option(
+    "--full-diff",
+    is_flag=True,
+    help="Full diff mode. Re-run the diff from the beginning.",
+)
 def data_diff(
     *,
     source_db_uri: str = None,
@@ -68,6 +79,8 @@ def data_diff(
     target_database: str = None,
     target_schema: str = "public",
     target_table: str,
+    diff_dimensions: tuple = None,
+    full_diff: bool = False,
 ):
     config_manager = ConfigManager().configure(
         source_database=source_database,
@@ -79,6 +92,8 @@ def data_diff(
         source_db_uri=source_db_uri,
         target_db_uri=target_db_uri,
         diffa_db_uri=diffa_db_uri,
+        diff_dimension_cols=list(diff_dimensions) if diff_dimensions else None,
+        full_diff=full_diff,
     )
     run_manager = RunManager(config_manager=config_manager)
     check_manager = CheckManager(config_manager=config_manager)
