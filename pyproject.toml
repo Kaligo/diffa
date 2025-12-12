@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "diffa"
-version = "0.1.0"
+version = "1.0.1"
 description = "Checking data different between Data Source and Data Warehouse"
 authors = ["Quoc Nguyen <quoc.nguyen@ascenda.com>"]
 readme = "README.md"
